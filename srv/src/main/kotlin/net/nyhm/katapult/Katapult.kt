@@ -76,6 +76,7 @@ class Katapult: CliktCommand(
   ).int().default(80)
 
   override fun run() {
+    dataDir.mkdir()
     initDb()
     initApp()
   }
