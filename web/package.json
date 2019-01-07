@@ -1,0 +1,58 @@
+{
+  "name": "katapult",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "vue-cli-service lint",
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "postbuild": "yarn cleanapp && yarn distapp",
+    "cleanapp": "rm -rf ../srv/src/main/resources/app/*",
+    "distapp": "cp -r dist/* ../srv/src/main/resources/app"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.10",
+    "@fortawesome/free-regular-svg-icons": "^5.6.1",
+    "@fortawesome/free-solid-svg-icons": "^5.6.1",
+    "@fortawesome/vue-fontawesome": "^0.1.3",
+    "axios": "^0.18.0",
+    "bootstrap": "^4.1.3",
+    "jquery": "^3.3.1",
+    "loglevel": "^1.6.1",
+    "popper.js": "^1.14.6",
+    "vue": "^2.5.17"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.2.0",
+    "@vue/cli-plugin-eslint": "^3.2.0",
+    "@vue/cli-service": "^3.2.0",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.8.0",
+    "eslint-plugin-vue": "^5.0.0-0",
+    "vue-template-compiler": "^2.5.17"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "rules": {},
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}
