@@ -1,6 +1,6 @@
 # Katapult
 
-Kotlin-oriented single-jar API/Web app using Javalin and Vue-Cli
+Kotlin-oriented single-jar API/Web app starter kit using Javalin and Vue-Cli
 
 ## Overview
 
