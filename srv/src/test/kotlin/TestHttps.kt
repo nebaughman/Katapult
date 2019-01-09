@@ -1,4 +1,4 @@
-import net.nyhm.katapult.HttpsUtil
+import net.nyhm.katapult.mod.HttpsUtil
 import org.junit.Test
 import java.io.File
 

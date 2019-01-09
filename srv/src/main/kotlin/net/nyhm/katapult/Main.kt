@@ -8,6 +8,7 @@ import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import io.javalin.Javalin
+import net.nyhm.katapult.mod.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -78,7 +79,7 @@ class Cli: CliktCommand(
     dataDir.mkdir() // TODO: mkdirs()
 
     val katapult = Katapult().init(
-        VueAppModule,
+        AppModule,
         UsersModule(dataDir),
         AuthModule,
         AdminModule

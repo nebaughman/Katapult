@@ -1,7 +1,8 @@
-package net.nyhm.katapult
+package net.nyhm.katapult.mod
 
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
+import net.nyhm.katapult.KatapultModule
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.util.ssl.SslContextFactory

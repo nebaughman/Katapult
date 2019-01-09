@@ -1,7 +1,8 @@
-package net.nyhm.katapult
+package net.nyhm.katapult.mod
 
 import io.javalin.*
 import io.javalin.apibuilder.ApiBuilder.*
+import net.nyhm.katapult.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object AdminModule: KatapultModule {
