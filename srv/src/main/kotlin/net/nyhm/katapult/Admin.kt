@@ -4,6 +4,12 @@ import io.javalin.*
 import io.javalin.apibuilder.ApiBuilder.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
+object AdminModule: KatapultModule {
+  override fun initialize(app: Javalin) {
+    app.routes(AdminApi.routes)
+  }
+}
+
 object AdminApi {
   /**
    * The routing, which should be added to the Javalin app's routes

@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import io.javalin.Javalin
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -63,7 +64,10 @@ class Cli: CliktCommand(
       "--http-redirect",
       help = "Enable HTTP redirect to secure port"
   ).flag("--no-http-redirect")
-
+  //
+  // TODO: Support independent http without redirect?
+  // If not, drop httpRedirect flag and just use httpPort > 0 as flag
+  //
   val httpPort by option(
       "--http-port",
       help = "HTTP listen port (will redirect to secure port)"
@@ -71,24 +75,35 @@ class Cli: CliktCommand(
 
   override fun run() {
 
-    // currently all the command-line options, but more command-line options
-    // could be added, which are not for Katapult itself (eg, module options)
-    val spec = KatapultSpec(
-        port = port,
-        dataDir = dataDir,
-        sessionFiles = sessionFiles,
-        https = https,
-        httpRedirect = httpRedirect,
-        httpPort = httpPort
+    dataDir.mkdir() // TODO: mkdirs()
+
+    val katapult = Katapult().init(
+        VueAppModule,
+        UsersModule(dataDir),
+        AuthModule,
+        AdminModule
     )
 
-    Katapult(spec).init(::dbModule,::apiModule).start()
-  }
+    if (https) {
+      // TODO: This is confusing (see note in Katapult.start())
+      val redirectPort = if (httpRedirect) httpPort else 0
+      katapult.init(HttpsModule(dataDir, port, redirectPort))
+    }
 
-  /**
-   * Sample SQLite DB module, which initializes Users table
-   */
-  private fun dbModule(context: KatapultContext) {
+    // persist sessions in file store
+    if (sessionFiles) {
+      katapult.init(FileSessionHandlerModule(dataDir))
+    }
+
+    katapult.start(port)
+  }
+}
+
+/**
+ * Sample Users module, which initializes users table in a SQLite db
+ */
+class UsersModule(val dataDir: File): KatapultModule {
+  override fun initialize(app: Javalin) {
     val url = "jdbc:sqlite:${dataDir}/data.sqlite" // TODO: parameterize db url & driver
     Database.connect(url, "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
@@ -102,19 +117,14 @@ class Cli: CliktCommand(
     transaction {
       // create admin user with initial default password
       if (UserDao.findName("admin") == null) {
-        val pass = Auth.hash("pass") // TODO: force change on initial login (if this matches)
+        val pass = Auth.hash("pass")
         val admin = UserDao.create(UserData("admin", pass, UserRole.ADMIN))
         Log.info(this) { "Created user ${admin.name}" }
       }
     }
-  }
-
-  /**
-   * Sample API modules
-   */
-  private fun apiModule(context: KatapultContext) {
-    context.app.routes(AuthApi.routes)
-    context.app.routes(AdminApi.routes)
+    // TODO: Store a pre-hashed/salted default password for admin; insert this into the db;
+    // upon login, if admin user's hash matches this, then force pw change;
+    // alternatively, add flag to user to force pw change on next login
   }
 }
 

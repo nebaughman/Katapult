@@ -1,9 +1,16 @@
 package net.nyhm.katapult
 
+import io.javalin.Javalin
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
+
+object AuthModule: KatapultModule {
+  override fun initialize(app: Javalin) {
+    app.routes(AuthApi.routes)
+  }
+}
 
 object AuthApi {
   val routes = {
