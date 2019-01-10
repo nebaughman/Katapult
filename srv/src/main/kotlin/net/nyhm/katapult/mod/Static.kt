@@ -1,14 +1,14 @@
 package net.nyhm.katapult.mod
 
-import io.javalin.Javalin
 import net.nyhm.katapult.KatapultModule
+import net.nyhm.katapult.ModuleSpec
 
 /**
  * This module enables static file serving
  */
 open class StaticFilesModule(val path: String): KatapultModule {
-  override fun initialize(app: Javalin) {
-    app.enableStaticFiles(path)
+  override fun initialize(spec: ModuleSpec) {
+    spec.app.enableStaticFiles(path)
   }
 }
 

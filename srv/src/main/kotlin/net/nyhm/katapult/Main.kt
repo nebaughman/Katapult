@@ -7,7 +7,6 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
-import io.javalin.Javalin
 import net.nyhm.katapult.mod.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -35,10 +34,26 @@ class Cli: CliktCommand(
     help = "$BRAND API/Web server"
 ) {
 
-  val port by option(
-      "--port",
-      help = "API/Web server port"
-  ).int().default(7000)
+  /**
+   * If HTTP and HTTPS are enabled, HTTP will be redirected to the HTTPS port.
+   * (Otherwise, experienced session issues serving both HTTP and HTTPS.)
+   */
+  val httpPort by option(
+      "--httpPort",
+      help = "HTTP listen port (0 to disable)"
+  ).int().default(0) // TODO: production 80, dev 7080
+
+  /*
+  val httpRedirect by option(
+      "--http-redirect",
+      help = "Redirect HTTP to HTTPS port"
+  ).flag("--no-http-redirect")
+  */
+
+  val httpsPort by option(
+      "--httpsPort",
+      help = "HTTPS listen port (0 to disable)"
+  ).int().default(0) // TODO: production 443, dev 7443
 
   val dataDir by option(
       "--data-dir",
@@ -52,27 +67,8 @@ class Cli: CliktCommand(
       help = "Store sessions in files"
   ).flag("--no-session-files")
 
-  /**
-   * Enable HTTPS connections. Set httpRedirect and httpPort to listen
-   * for HTTP (on httpPort) and redirect to HTTPS on the secure port.
-   */
-  val https by option(
-      "--https",
-      help = "Enable HTTPS (only)"
-  ).flag()
-
-  val httpRedirect by option(
-      "--http-redirect",
-      help = "Enable HTTP redirect to secure port"
-  ).flag("--no-http-redirect")
-  //
-  // TODO: Support independent http without redirect?
-  // If not, drop httpRedirect flag and just use httpPort > 0 as flag
-  //
-  val httpPort by option(
-      "--http-port",
-      help = "HTTP listen port (will redirect to secure port)"
-  ).int().default(80)
+  val http: Boolean get() { return httpPort > 0 }
+  val https: Boolean get() { return httpsPort > 0 }
 
   override fun run() {
 
@@ -85,18 +81,22 @@ class Cli: CliktCommand(
         AdminModule
     )
 
-    if (https) {
-      // TODO: This is confusing (see note in Katapult.start())
-      val redirectPort = if (httpRedirect) httpPort else 0
-      katapult.init(HttpsModule(dataDir, port, redirectPort))
+    if (http) katapult.init(HttpModule(httpPort))
+
+    // if both http & https, redirect http to https port
+    if (http && https) {
+      katapult.init(RedirectModule(
+          { it.scheme() == "http" && it.port() == httpPort },
+          httpsPort, "https"
+      ))
     }
+
+    if (https) katapult.init(HttpsModule(dataDir, httpsPort))
 
     // persist sessions in file store
-    if (sessionFiles) {
-      katapult.init(FileSessionHandlerModule(dataDir))
-    }
+    if (sessionFiles) katapult.init(FileSessionHandlerModule(dataDir))
 
-    katapult.start(port)
+    katapult.start()
   }
 }
 
@@ -104,7 +104,7 @@ class Cli: CliktCommand(
  * Sample Users module, which initializes users table in a SQLite db
  */
 class UsersModule(val dataDir: File): KatapultModule {
-  override fun initialize(app: Javalin) {
+  override fun initialize(spec: ModuleSpec) {
     val url = "jdbc:sqlite:${dataDir}/data.sqlite" // TODO: parameterize db url & driver
     Database.connect(url, "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE

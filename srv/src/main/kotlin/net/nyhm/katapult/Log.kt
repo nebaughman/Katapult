@@ -7,7 +7,7 @@ object Log {
 
   fun info(source: Any, msg: () -> Any?) = logger(source).info(msg()?.toString())
 
-  fun warn(source: Any, e: Exception?, msg: () -> Any? = { e?.message }) =
+  fun warn(source: Any, e: Exception? = null, msg: () -> Any? = { e?.message }) =
     logger(source).warn(msg()?.toString(), e)
 
   fun fail(source: Any, e: Exception = Exception(), msg: () -> Any? = { e.message }) =

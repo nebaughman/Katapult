@@ -1,6 +1,5 @@
 package net.nyhm.katapult.mod
 
-import io.javalin.Javalin
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import net.nyhm.katapult.*
@@ -8,8 +7,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 
 object AuthModule: KatapultModule {
-  override fun initialize(app: Javalin) {
-    app.routes(AuthApi.routes)
+  override fun initialize(spec: ModuleSpec) {
+    spec.app.routes(AuthApi.routes)
   }
 }
 
@@ -69,8 +68,8 @@ data class Login(val user: String, val pass: String): Action {
   override fun invoke(session: UserSession): Any? {
     session.logout()
     val creds = Creds(user, pass)
-    val user = UserDao.findName(creds.user) ?: throw UnauthorizedResponse()
-    if (!Auth.verify(user, creds)) throw UnauthorizedResponse()
+    val user = UserDao.findName(creds.user) ?: throw UnauthorizedResponse("No such user")
+    if (!Auth.verify(user, creds)) throw UnauthorizedResponse("Invalid password")
     session.login(user)
     val redirect = if (user.role == UserRole.ADMIN) "/admin" else "/"
     Log.info(this) { "Login ${user.name}" }

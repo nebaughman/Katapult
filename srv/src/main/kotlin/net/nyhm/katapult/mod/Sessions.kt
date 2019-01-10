@@ -1,7 +1,7 @@
 package net.nyhm.katapult.mod
 
-import io.javalin.Javalin
 import net.nyhm.katapult.KatapultModule
+import net.nyhm.katapult.ModuleSpec
 import org.eclipse.jetty.server.session.DefaultSessionCache
 import org.eclipse.jetty.server.session.FileSessionDataStore
 import org.eclipse.jetty.server.session.SessionHandler
@@ -11,8 +11,8 @@ import java.io.File
  * Persists http sessions in files in dataDir/sessions/
  */
 class FileSessionHandlerModule(val dataDir: File): KatapultModule {
-  override fun initialize(app: Javalin) {
-    app.sessionHandler { fileSessionHandler(dataDir) }
+  override fun initialize(spec: ModuleSpec) {
+    spec.app.sessionHandler { fileSessionHandler(dataDir) }
   }
 
   /**

@@ -1,13 +1,16 @@
 package net.nyhm.katapult.mod
 
-import io.javalin.*
+import io.javalin.BadRequestResponse
+import io.javalin.Context
+import io.javalin.Handler
+import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import net.nyhm.katapult.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object AdminModule: KatapultModule {
-  override fun initialize(app: Javalin) {
-    app.routes(AdminApi.routes)
+  override fun initialize(spec: ModuleSpec) {
+    spec.app.routes(AdminApi.routes)
   }
 }
 

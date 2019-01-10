@@ -1,13 +1,10 @@
 package net.nyhm.katapult.mod
 
-import io.javalin.Javalin
-import io.javalin.apibuilder.ApiBuilder
 import net.nyhm.katapult.KatapultModule
-import org.eclipse.jetty.server.Server
+import net.nyhm.katapult.ModuleSpec
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import java.io.File
-import java.net.URI
 import java.security.KeyFactory
 import java.security.KeyStore
 import java.security.SecureRandom
@@ -22,52 +19,16 @@ import javax.net.ssl.TrustManagerFactory
 
 class HttpsModule(
     val dataDir: File,
-    val port: Int = 443,
-    val httpPort: Int = 80 // > 0 to enable http redirection
+    val httpsPort: Int = 443
 ): KatapultModule {
 
-  override fun initialize(app: Javalin) {
-    // if non-secure http redirect requested, rewrite url with https scheme
-    if (httpPort > 0) {
-      app.routes(httpRedirect(port))
-    }
-
-    app.server {
-      Server().apply {
-        addConnector(
-            ServerConnector(this, sslContextFactory()).also {
-              it.port = port // 443 for standard HTTPS
-            }
-        )
-        if (httpPort > 0) {
-          addConnector(
-              ServerConnector(this).also { it.port = httpPort }
-          )
-        }
-      }
-    }
-  }
-
-  /**
-   * Javalin redirect router, which will issue a redirect to the same url with https scheme.
-   * Use this when https is configured and http redirect is enabled.
-   */
-  private fun httpRedirect(securePort: Int) = {
-    ApiBuilder.before { ctx ->
-      if (ctx.scheme() == "http") {
-        val https = URI(ctx.url()).let {
-          URI(
-              "https",
-              it.userInfo,
-              it.host,
-              securePort,
-              it.path,
-              it.query,
-              it.fragment
-          )
-        }.toURL().toExternalForm()
-        ctx.redirect(https)
-      }
+  override fun initialize(spec: ModuleSpec) {
+    spec.server.apply {
+      addConnector(
+          ServerConnector(this, sslContextFactory()).also {
+            it.port = httpsPort
+          }
+      )
     }
   }
 

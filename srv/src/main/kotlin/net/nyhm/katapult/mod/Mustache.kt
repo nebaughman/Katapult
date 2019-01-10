@@ -1,10 +1,10 @@
 package net.nyhm.katapult.mod
 
 import com.github.mustachejava.DefaultMustacheFactory
-import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.rendering.template.JavalinMustache
 import net.nyhm.katapult.KatapultModule
+import net.nyhm.katapult.ModuleSpec
 
 /**
  * Serve mustache templates.
@@ -23,11 +23,11 @@ class MustacheModule(
     val templatePath: String = "/template",
     vararg val routePaths: String
 ): KatapultModule {
-  override fun initialize(app: Javalin) {
+  override fun initialize(spec: ModuleSpec) {
     JavalinMustache.configure(DefaultMustacheFactory())
     routePaths.forEach {
       val path = "$templatePath/$it.mustache" // hacky
-      app.routes {
+      spec.app.routes {
         ApiBuilder.get(it) { ctx -> ctx.render(path) }
       }
     }
