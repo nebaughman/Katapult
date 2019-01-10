@@ -16,13 +16,11 @@ import java.io.File
 import java.sql.Connection
 import java.util.*
 
-const val BRAND = "Katapult"
-
 fun main(args: Array<String>) = Cli()
     .versionOption(
-        version = Version.version,
+        version = BuildProperties.version,
         help = "Show version and exit",
-        message = { "$BRAND v$it" }
+        message = { BuildProperties.fullTitle }
     )
     .main(args)
 
@@ -30,8 +28,8 @@ fun main(args: Array<String>) = Cli()
  * Command line interpreter
  */
 class Cli: CliktCommand(
-    name = BRAND,
-    help = "$BRAND API/Web server"
+    name = BuildProperties.project,
+    help = "${BuildProperties.project} API/Web server"
 ) {
 
   /**
@@ -71,6 +69,8 @@ class Cli: CliktCommand(
   val https: Boolean get() { return httpsPort > 0 }
 
   override fun run() {
+
+    Log.info(this) { "Starting ${BuildProperties.fullTitle}" }
 
     dataDir.mkdir() // TODO: mkdirs()
 
@@ -129,13 +129,17 @@ class UsersModule(val dataDir: File): KatapultModule {
   }
 }
 
-/**
- * Contains the build version
- */
-object Version {
-  val version: String by lazy {
-    val props = Properties()
-    props.load(javaClass.getResource("/version.properties").openStream())
-    props["version"] as String
+object BuildProperties {
+  private val props: Properties by lazy {
+    Properties().apply {
+      load(BuildProperties.javaClass.getResource("/project.properties").openStream())
+    }
   }
+
+  private fun value(key: String): String = props[key] as String? ?: ""
+
+  val project: String get() = value("project")
+  val version: String get() = value("version")
+
+  val fullTitle: String get() = "$project v$version"
 }
