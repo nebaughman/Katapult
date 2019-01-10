@@ -74,29 +74,29 @@ class Cli: CliktCommand(
 
     dataDir.mkdir() // TODO: mkdirs()
 
-    val katapult = Katapult().init(
+    val modules = mutableListOf(
         AppModule,
         UsersModule(dataDir),
         AuthModule,
-        AdminModule
+        AdminModule,
+        SampleErrorModule
     )
 
-    if (http) katapult.init(HttpModule(httpPort))
+    if (http) modules.add(HttpModule(httpPort))
+    if (https) modules.add(HttpsModule(dataDir, httpsPort))
 
     // if both http & https, redirect http to https port
     if (http && https) {
-      katapult.init(RedirectModule(
+      modules.add(RedirectModule(
           { it.scheme() == "http" && it.port() == httpPort },
           httpsPort, "https"
       ))
     }
 
-    if (https) katapult.init(HttpsModule(dataDir, httpsPort))
-
     // persist sessions in file store
-    if (sessionFiles) katapult.init(FileSessionHandlerModule(dataDir))
+    if (sessionFiles) modules.add(FileSessionHandlerModule(dataDir))
 
-    katapult.start()
+    Katapult(*modules.toTypedArray()).start()
   }
 }
 

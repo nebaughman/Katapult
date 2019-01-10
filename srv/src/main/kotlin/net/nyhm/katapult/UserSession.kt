@@ -5,6 +5,15 @@ import java.io.Serializable
 
 fun Context.session(): UserSession = UserSession.get(this)
 
+// TODO: This needs to be better tested; for one, if serving http & https, session does
+// not seem to be stable; try something like this:
+//
+// - Start Katapult on 7000 http & 7001 https
+// - Visit http, log in, then visit 7001 (in Chrome)
+// - Stop Katapult, restart with 7000 https (note: 7000 was http)
+// - Log in; log in does not fail, but after redirect (to / or /admin),
+//   user is not logged in, so re-redirects back to /login
+//
 class UserSession private constructor(
     private val ctx: Context,
     private val data: SessionData
