@@ -1,12 +1,19 @@
-package net.nyhm.katapult
+package net.nyhm.katapult.api
 
 import io.javalin.Context
 
 /**
- * Report whether this context is an AJAX request.
- * Security note: This is based on headers, which could be spoofed.
+ * An action is invoked with a [UserSession].
+ *
+ * The action implementation must be able to be deserialized by JavalinJson
+ * (from the body of an api request).
+ *
+ * Likewise, any return value must be able to be serialized by JavalinJson
+ * (to be sent as the response of a request).
  */
-fun Context.isAjax() = this.header("X-Requested-With") == "XMLHttpRequest"
+interface Action {
+  fun invoke(session: UserSession): Any?
+}
 
 /**
  * Deserialize the specified [Action] type from the request body's json data,
@@ -25,10 +32,7 @@ fun <T: Action> Context.process(action: T) {
 }
 
 /**
- * An action is invoked with a [UserSession].
- * The action implementation must be able to be deserialized by JavalinJson.
- * Likewise, any return value must be able to be serialized by JavalinJson.
+ * Report whether this context is an AJAX request.
+ * Security note: This is based on headers, which could be spoofed.
  */
-interface Action {
-  fun invoke(session: UserSession): Any?
-}
+fun Context.isAjax() = this.header("X-Requested-With") == "XMLHttpRequest"

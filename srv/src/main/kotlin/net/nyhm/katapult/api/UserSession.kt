@@ -1,6 +1,9 @@
-package net.nyhm.katapult
+package net.nyhm.katapult.api
 
 import io.javalin.Context
+import net.nyhm.katapult.db.User
+import net.nyhm.katapult.db.UserDao
+import net.nyhm.katapult.db.UserRole
 import java.io.Serializable
 
 fun Context.session(): UserSession = UserSession.get(this)

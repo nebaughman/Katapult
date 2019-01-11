@@ -7,13 +7,11 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import net.nyhm.katapult.api.*
+import net.nyhm.katapult.db.SqliteModule
+import net.nyhm.katapult.db.UsersModule
 import net.nyhm.katapult.mod.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
-import java.sql.Connection
 import java.util.*
 
 fun main(args: Array<String>) = Cli()
@@ -76,7 +74,8 @@ class Cli: CliktCommand(
 
     val modules = mutableListOf(
         AppModule,
-        UsersModule(dataDir),
+        SqliteModule(dataDir),
+        UsersModule(Auth::hash),
         AuthModule,
         AdminModule,
         SampleErrorModule
@@ -97,35 +96,6 @@ class Cli: CliktCommand(
     if (sessionFiles) modules.add(FileSessionHandlerModule(dataDir))
 
     Katapult(*modules.toTypedArray()).start()
-  }
-}
-
-/**
- * Sample Users module, which initializes users table in a SQLite db
- */
-class UsersModule(val dataDir: File): KatapultModule {
-  override fun initialize(spec: ModuleSpec) {
-    val url = "jdbc:sqlite:${dataDir}/data.sqlite" // TODO: parameterize db url & driver
-    Database.connect(url, "org.sqlite.JDBC")
-    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-    // only sqlite requires serializable isolation level
-    // https://github.com/JetBrains/Exposed/wiki/FAQ
-
-    transaction {
-      SchemaUtils.create(Users)
-    }
-
-    transaction {
-      // create admin user with initial default password
-      if (UserDao.findName("admin") == null) {
-        val pass = Auth.hash("pass")
-        val admin = UserDao.create(UserData("admin", pass, UserRole.ADMIN))
-        Log.info(this) { "Created user ${admin.name}" }
-      }
-    }
-    // TODO: Store a pre-hashed/salted default password for admin; insert this into the db;
-    // upon login, if admin user's hash matches this, then force pw change;
-    // alternatively, add flag to user to force pw change on next login
   }
 }
 

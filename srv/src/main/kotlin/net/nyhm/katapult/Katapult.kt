@@ -23,6 +23,9 @@ class Katapult(
     private vararg val modules: KatapultModule
 ) {
 
+  /**
+   * The active Javalin server instance
+   */
   private var app: Javalin? = null
 
   /**
@@ -44,6 +47,6 @@ class Katapult(
 
   fun stop() {
     app?.stop()
-    //app = null // TODO: Define whether ok for modules to be re-initialized (upon restart)
+    //app = null // TODO: Define whether ok for modules to be re-initialized (upon if start() called again)
   }
 }

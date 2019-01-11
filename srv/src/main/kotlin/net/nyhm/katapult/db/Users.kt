@@ -1,14 +1,46 @@
-package net.nyhm.katapult
+package net.nyhm.katapult.db
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
 import io.javalin.security.Role
+import net.nyhm.katapult.KatapultModule
+import net.nyhm.katapult.Log
+import net.nyhm.katapult.ModuleSpec
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+
+/**
+ * Sample Users module, which initializes users table.
+ * Requires a DB module to have been initialized first.
+ *
+ * @param hash function that takes a plaintext password and produces a hashed
+ * version suitable for db storage
+ */
+class UsersModule(private val hash: (String) -> String): KatapultModule {
+
+  override fun initialize(spec: ModuleSpec) {
+    transaction {
+      SchemaUtils.create(Users)
+    }
+
+    transaction {
+      // create admin user with initial default password
+      if (UserDao.findName("admin") == null) {
+        val pass = hash("pass")
+        val admin = UserDao.create(UserData("admin", pass, UserRole.ADMIN))
+        Log.info(this) { "Created user ${admin.name}" }
+      }
+    }
+    // TODO: Store a pre-hashed/salted default password for admin; insert this into the db;
+    // upon login, if admin user's hash matches this, then force pw change;
+    // alternatively, add flag to user to force pw change on next login
+  }
+}
 
 /**
  * Access role
@@ -54,7 +86,7 @@ class UserEntity(id: EntityID<Int>): IntEntity(id), User {
 /**
  * Jackson Json converter for UserEntity into UserInfo suitable for sending to client
  */
-object UserConverter: StdConverter<User,UserInfo>() {
+object UserConverter: StdConverter<User, UserInfo>() {
   override fun convert(value: User) = UserInfo.fromUser(value)
 }
 

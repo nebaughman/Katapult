@@ -2,6 +2,9 @@ package net.nyhm.katapult
 
 import org.slf4j.LoggerFactory
 
+/**
+ * Logging service (wrapper)
+ */
 object Log {
   private fun logger(source: Any) = LoggerFactory.getLogger(source.javaClass)
 

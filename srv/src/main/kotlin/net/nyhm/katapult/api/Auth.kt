@@ -1,8 +1,11 @@
-package net.nyhm.katapult.mod
+package net.nyhm.katapult.api
 
 import io.javalin.UnauthorizedResponse
 import io.javalin.apibuilder.ApiBuilder.*
 import net.nyhm.katapult.*
+import net.nyhm.katapult.db.User
+import net.nyhm.katapult.db.UserDao
+import net.nyhm.katapult.db.UserRole
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 
