@@ -61,6 +61,14 @@ java -jar <the.jar> --options...
 
 The included `main` function runs the sample api/app. Kindly refer to the source for command-line options.
 
+### Development
+
+The included API & app are for demonstration purposes. As Katapult is still very much an experimental work-in-progress, there is not a clearly defined way to utilize Katapult for other projects.
+
+Consider [forking](https://help.github.com/articles/fork-a-repo/) Katapult and developing your app/api in a different directory structure. [Sync your fork](https://help.github.com/articles/syncing-a-fork/) for Katapult updates (and beware of breaking changes).
+
+> Contributions (issues, pull requests, general advice) are most welcome!
+
 ## Javalin Server
 
 The `srv` project integrates a number of components for building a REST API and hosting static pages (such as the Vue app).
