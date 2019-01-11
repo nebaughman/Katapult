@@ -8,6 +8,8 @@ The purpose of this project is to combine a number of useful libraries into a st
 
 When built, Katapult provides a single executable `jar` file that can self-serve a REST API and Vue Web app.
 
+This makes for easy deployment. :bulb: Also consider building `localhost` Web apps.
+
 > Important: This might not be suitable for production purposes. The primary motivation is to experiment and learn a thing or two.
 
 ### Ecosystem
@@ -45,11 +47,7 @@ Two subprojects:
 
 - The `srv` project augments Javalin with some classes for REST API development and session management, provides database/DAO integration via Exposed framework, and supports HTTPS.
 
-- The `web` project includes a Vue-Cli app configuration, including Bootstrap and FontAwesome.
-
-In the web project, `yarn build` copies `dist` to the server's `resources/app`, where it is served as static content. (If this isn't desirable, you could serve the Vue app independently.)
-
-> CORS headers are supported by Javalin, but not yet configured, so hosting the API on a different domain than the app may cause cross-origin resource errors.
+- The `web` project includes a Vue-Cli app configuration, including Bootstrap and FontAwesome. `yarn build` copies `dist` to the server's `resources/app`, where it is served as static content.
 
 ### Deployment
 
@@ -91,6 +89,8 @@ The `srv` project integrates a number of components for building a REST API and 
   
 - **Templating:** Javalin supports template engines for server-rendered HTML. An example [Mustache](https://mustache.github.io/) Katapult module is provided.
 
+- **External Data:** Server runtime data is stored in a separate data directory. This includes SQLite database, session files, SSL certificate files, etc.
+
 ## Vue App
 
 The `web` project is a Vue-Cli app with some additional configuration (multi-page setup, Bootstrap and FontAwesome integration, Axios for ajax, etc). The Vue app itself is just an example starting point.
@@ -98,6 +98,8 @@ The `web` project is a Vue-Cli app with some additional configuration (multi-pag
 The primary point is that the Vue app can be served as static content from the Javalin server, allowing the whole app/api to be bundled as a single executable jar.
 
 If bundling is not desirable, the Vue app could be hosted separately.
+
+> CORS headers are supported by Javalin, but not yet configured, so hosting the API on a different domain than the app may cause cross-origin resource errors.
 
 ## Wishlist
 
