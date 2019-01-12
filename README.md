@@ -1,6 +1,6 @@
 # Katapult
 
-[Kotlin](https://kotlinlang.org/) oriented single-jar API/Web app starter kit using [Javalin](https://javalin.io) and [Vue-Cli](https://cli.vuejs.org/)
+[Kotlin](https://kotlinlang.org/) oriented single-jar API/Web-app starter kit using [Javalin](https://javalin.io) and [Vue-Cli](https://cli.vuejs.org/)
 
 ## Overview
 
@@ -10,13 +10,14 @@ When built, Katapult provides a single executable `jar` file that can self-serve
 
 This makes for easy deployment. :bulb: Also consider building `localhost` Web apps.
 
-> Important: This might not be suitable for production purposes. The primary motivation is to experiment and learn a thing or two.
+> Important: This might not be suitable for production purposes. My primary motivation is to experiment and learn a thing or two.
 
 ### Ecosystem
 
 **Server:**
 
 - [Kotlin](https://kotlinlang.org/)
+- [Java](https://java.com)
 - [Javalin](https://javalin.io)
 - [Jetty](https://www.eclipse.org/jetty/)
 - [Clikt](https://github.com/ajalt/clikt)
@@ -45,13 +46,13 @@ Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let'
 
 Two subprojects:
 
-- The `srv` project augments Javalin with some classes for REST API development and session management, provides database/DAO integration via Exposed framework, and supports HTTPS.
+- The `api` project augments Javalin with some classes for REST API development and session management, provides database/DAO integration via Exposed framework, and supports HTTPS.
 
-- The `web` project includes a Vue-Cli app configuration, including Bootstrap and FontAwesome. `yarn build` copies `dist` to the server's `resources/app`, where it is served as static content.
+- The `app` project includes a Vue-Cli app configuration, including Bootstrap and FontAwesome. `yarn build` copies `dist` to the API server's `resources/app`, where it is bundled and served as static content.
 
 ### Deployment
 
-Create the single executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty. External resources reside in a `data` directory.
+Create the single executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty. External resources reside in a `data` directory, created at initial startup.
 
 [Java](https://java.com) is required to run Katapult. In general, execute a jar like: 
 
@@ -67,11 +68,11 @@ The included API & app are for demonstration purposes. As Katapult is still very
 
 Consider [forking](https://help.github.com/articles/fork-a-repo/) Katapult and developing your app/api in a different directory structure. [Sync your fork](https://help.github.com/articles/syncing-a-fork/) for Katapult updates (and beware of breaking changes).
 
-> Contributions (issues, pull requests, general advice) are most welcome!
+> Contributions (pull requests, issue reports, general advice) are most welcome!
 
 ## Javalin Server
 
-The `srv` project integrates a number of components for building a REST API and hosting static pages (such as the Vue app).
+The `api` project integrates a number of components for building a REST API and hosting static pages (such as the Vue app).
 
 - **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup.
 
@@ -101,7 +102,7 @@ The `srv` project integrates a number of components for building a REST API and 
 
 ## Vue App
 
-The `web` project is a Vue-Cli app with some additional configuration (multi-page setup, Bootstrap and FontAwesome integration, Axios for ajax, etc). The Vue app itself is just an example starting point.
+The `app` project is a Vue-Cli app with some additional configuration (multi-page setup, Bootstrap and FontAwesome integration, Axios for ajax, etc). The Vue app itself is just an example starting point.
 
 The primary point is that the Vue app can be served as static content from the Javalin server, allowing the whole app/api to be bundled as a single executable jar.
 
@@ -111,7 +112,7 @@ If bundling is not desirable, the Vue app could be hosted separately.
 
 ## Wishlist
 
-- Bring the `web` and `srv` projects together under one build environment (maybe by having gradle run the yarn scripts)
+- Bring the `app` and `api` projects together under one build environment (maybe by having gradle run the yarn scripts)
 - Rewrite `build.gradle` in Kotlin script
 - Cross-compile the Kotlin data classes used by the API for both JS and JVM, so the same implementations can be sent and received on each side
 - Allow for TypeScript `.ts` files, as well as `<script lang="ts">` in `.vue` files

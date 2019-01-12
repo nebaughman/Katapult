@@ -1,1 +1,7 @@
 .idea
+
+# Created by buildjar
+/Katapult*.jar
+
+# Created if Katapult jar is executed in project root
+/data

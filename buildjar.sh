@@ -3,10 +3,10 @@
 # Build the Katapult jar
 #
 set -e
-cd web
+cd app
 yarn install
 yarn build
-cd ../srv
+cd ../api
 ./gradlew shadowJar
 cp build/libs/Katapult-*.*.*-all.jar ../
 cd ..

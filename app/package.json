@@ -7,8 +7,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "postbuild": "yarn cleanapp && yarn distapp",
-    "cleanapp": "rm -rf ../srv/src/main/resources/app/*",
-    "distapp": "cp -r dist/* ../srv/src/main/resources/app"
+    "cleanapp": "rm -rf ../api/src/main/resources/app/*",
+    "distapp": "cp -r dist/* ../api/src/main/resources/app"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.10",
