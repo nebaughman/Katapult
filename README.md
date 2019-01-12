@@ -51,9 +51,9 @@ Two subprojects:
 
 ### Deployment
 
-Create the single executable jar via `shadowJar`. All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty. External resources reside in a `data` directory.
+Create the single executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty. External resources reside in a `data` directory.
 
-In general, execute a jar like: 
+[Java](https://java.com) is required to run Katapult. In general, execute a jar like: 
 
 ```
 java -jar <the.jar> --options...
