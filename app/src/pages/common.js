@@ -14,6 +14,10 @@ library.add(fas)
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 Vue.component('fa-icon', FontAwesomeIcon)
 
+// server may check header for ajax vs user actions
+import axios from 'axios'
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+
 import * as log from 'loglevel'
 if (process.env.NODE_ENV === "development") {
   log.setDefaultLevel('debug')
