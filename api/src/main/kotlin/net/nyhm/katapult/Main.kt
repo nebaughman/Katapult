@@ -7,7 +7,9 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
-import net.nyhm.katapult.api.*
+import net.nyhm.katapult.api.Auth
+import net.nyhm.katapult.api.AuthModule
+import net.nyhm.katapult.api.AdminModule
 import net.nyhm.katapult.db.SqliteModule
 import net.nyhm.katapult.db.UsersModule
 import net.nyhm.katapult.mod.*

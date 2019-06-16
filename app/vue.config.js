@@ -1,3 +1,8 @@
+const package = require('./package.json')
+process.env.VUE_APP_NAME = package.name
+process.env.VUE_APP_VERSION = package.version
+process.env.VUE_APP_BUILD_TIME = Date.now()
+
 module.exports = {
   pages: {
     index: {
