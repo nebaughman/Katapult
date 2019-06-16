@@ -1,4 +1,4 @@
-package net.nyhm.katapult.db
+package net.nyhm.katapult.example
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -39,6 +39,8 @@ class UsersModule(private val hash: (String) -> String): KatapultModule {
     // TODO: Store a pre-hashed/salted default password for admin; insert this into the db;
     // upon login, if admin user's hash matches this, then force pw change;
     // alternatively, add flag to user to force pw change on next login
+
+    spec.app.attribute(UserDao::class.java, UserDao)
   }
 }
 
@@ -50,8 +52,14 @@ enum class UserRole: Role {
   USER,
 
   @JsonProperty("admin")
-  ADMIN
+  ADMIN,
+
+  @JsonProperty("guest")
+  GUEST
 }
+
+// TODO: Define specific userId type
+//data class UserId(val id: Int)
 
 interface User {
   var name: String
@@ -65,38 +73,31 @@ data class UserData(
     override var pass: String,
     override var role: UserRole
 ): User {
-  companion object {
-    fun fromUser(user: User) = UserData(
-        user.name,
-        user.pass,
-        user.role
-    )
-  }
+  constructor(user: User): this(user.name, user.pass, user.role)
 }
 
 @JsonSerialize(converter = UserConverter::class)
 class UserEntity(id: EntityID<Int>): IntEntity(id), User {
   companion object: IntEntityClass<UserEntity>(Users)
 
+  //override var userId: UserId? = UserId(id.value)
   override var name by Users.name
   override var pass by Users.pass
   override var role by Users.role
 }
 
 /**
- * Jackson Json converter for UserEntity into UserInfo suitable for sending to client
- */
-object UserConverter: StdConverter<User, UserInfo>() {
-  override fun convert(value: User) = UserInfo.fromUser(value)
-}
-
-/**
  * User fields suitable for sending to client
  */
 data class UserInfo(val name: String, val role: UserRole) {
-  companion object {
-    fun fromUser(user: User) = UserInfo(user.name, user.role)
-  }
+  constructor(user: User): this(user.name, user.role)
+}
+
+/**
+ * Jackson Json converter for UserEntity into UserInfo suitable for sending to client
+ */
+object UserConverter: StdConverter<User, UserInfo>() {
+  override fun convert(value: User) = UserInfo(value)
 }
 
 /**
@@ -117,7 +118,7 @@ object Users: IntIdTable("users") {
  * for mutation; or the entire operation may be wrapped in a transaction.
  */
 object UserDao {
-  fun create(user: UserData): User = transaction {
+  fun create(user: User): User = transaction {
     UserEntity.new {
       name = user.name
       pass = user.pass

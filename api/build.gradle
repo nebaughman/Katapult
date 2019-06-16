@@ -6,10 +6,10 @@ plugins {
 }
 
 group 'net.nyhm.katapult'
-version '0.0.0'
+version '0.1.0'
 
 sourceCompatibility = 1.8
-mainClassName = 'net.nyhm.katapult.MainKt'
+mainClassName = 'net.nyhm.katapult.example.MainKt'
 
 repositories {
     jcenter()

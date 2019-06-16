@@ -1,7 +1,7 @@
 .idea
 
 # Created by buildjar
-/Katapult*.jar
+/katapult*.jar
 
 # Created if Katapult jar is executed in project root
 /data

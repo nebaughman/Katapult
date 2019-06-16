@@ -1,4 +1,4 @@
-package net.nyhm.katapult
+package net.nyhm.katapult.example
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.options.default
@@ -7,11 +7,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
-import net.nyhm.katapult.api.Auth
-import net.nyhm.katapult.api.AuthModule
-import net.nyhm.katapult.api.AdminModule
-import net.nyhm.katapult.db.SqliteModule
-import net.nyhm.katapult.db.UsersModule
+import net.nyhm.katapult.Katapult
+import net.nyhm.katapult.Log
 import net.nyhm.katapult.mod.*
 import java.io.File
 import java.util.*
@@ -76,11 +73,12 @@ class Cli: CliktCommand(
 
     val modules = mutableListOf(
         AppModule,
-        SqliteModule(dataDir),
+        SqliteModule(File(dataDir, "data.sqlite")),
         UsersModule(Auth::hash),
-        AuthModule,
+        AuthApi(true),
         AdminModule,
-        SampleErrorModule
+        SampleErrorModule,
+        FileSessionHandlerModule(dataDir)
     )
 
     if (http) modules.add(HttpModule(httpPort))

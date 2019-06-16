@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a href="/" class="navbar-brand">Katapult</a>
-    <span v-if="isAdmin" class="navbar-text">Admin</span>
+    <a v-if="isAdmin" href="/admin" class="navbar-text">Admin</a>
     <LoginLink class="ml-auto text-muted"/>
   </nav>
 </template>

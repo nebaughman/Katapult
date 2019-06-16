@@ -8,5 +8,5 @@ yarn install
 yarn build
 cd ../api
 ./gradlew shadowJar
-cp build/libs/Katapult-*.*.*-all.jar ../
+cp build/libs/katapult-*.*.*-all.jar ../
 cd ..

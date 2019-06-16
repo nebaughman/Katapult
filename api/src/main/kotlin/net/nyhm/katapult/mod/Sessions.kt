@@ -9,6 +9,7 @@ import java.io.File
 
 /**
  * Persists http sessions in files in dataDir/sessions/
+ * Sessions and data must be [Serializable]
  */
 class FileSessionHandlerModule(val dataDir: File): KatapultModule {
   override fun initialize(spec: ModuleSpec) {

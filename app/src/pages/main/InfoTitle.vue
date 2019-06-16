@@ -6,7 +6,7 @@
     </h3>
     <p class="lead">
       <a href="https://kotlinlang.org/">Kotlin</a>-oriented
-      single-jar API/Web app starter kit using
+      single-jar API+Web app starter kit using
       <a href="https://javalin.io">Javalin</a> and
       <a href="https://cli.vuejs.org/">Vue-Cli</a>
     </p>

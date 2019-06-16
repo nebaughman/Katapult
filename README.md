@@ -1,12 +1,12 @@
 # Katapult
 
-[Kotlin](https://kotlinlang.org/) oriented single-jar API/Web-app starter kit using [Javalin](https://javalin.io) and [Vue-Cli](https://cli.vuejs.org/)
+[Kotlin](https://kotlinlang.org/) oriented single-jar API+Web app starter kit using [Javalin](https://javalin.io) and [Vue-Cli](https://cli.vuejs.org/)
 
 ## Overview
 
 The purpose of this project is to combine a number of useful libraries into a starting framework for other projects.
 
-When built, Katapult provides a single executable `jar` file that can self-serve a REST API and Vue Web app.
+When built, Katapult provides a single executable `jar` file that can self-serve an API (REST or session-based) and Vue Web app (single-page or multi-page).
 
 This makes for easy deployment. :bulb: Also consider building `localhost` Web apps.
 
@@ -16,10 +16,8 @@ This makes for easy deployment. :bulb: Also consider building `localhost` Web ap
 
 **Server:**
 
-- [Kotlin](https://kotlinlang.org/)
-- [Java](https://java.com)
-- [Javalin](https://javalin.io)
-- [Jetty](https://www.eclipse.org/jetty/)
+- [Kotlin](https://kotlinlang.org/) (& [Java](https://java.com))
+- [Javalin](https://javalin.io) (& [Jetty](https://www.eclipse.org/jetty/))
 - [Clikt](https://github.com/ajalt/clikt)
 - [BCrypt](https://github.com/patrickfav/bcrypt)
 - [Exposed](https://github.com/JetBrains/Exposed)
@@ -29,7 +27,7 @@ This makes for easy deployment. :bulb: Also consider building `localhost` Web ap
 - [Gradle](https://gradle.org/)
 - [ShadowJar](https://github.com/johnrengelman/shadow)
 
-Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let's Encrypt](https://letsencrypt.org/) (and maybe other certificate authorities).
+Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let's Encrypt](https://letsencrypt.org/) - no messing with `jks` files!
 
 **Client:**
 
@@ -46,13 +44,13 @@ Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let'
 
 Two subprojects:
 
-- The `api` project augments Javalin with some classes for REST API development and session management, provides database/DAO integration via Exposed framework, and supports HTTPS.
+- The `api` project augments Javalin with a simple modular framework. Modules are provided to help with authentication and session management, database/DAO integration (via Exposed), HTTPS support, Mustache templates, CORS headers, and static Vue app hosting.
 
 - The `app` project includes a Vue-Cli app configuration, including Bootstrap and FontAwesome. `yarn build` copies `dist` to the API server's `resources/app`, where it is bundled and served as static content.
 
 ### Deployment
 
-Create the single executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty. External resources reside in a `data` directory, created at initial startup.
+Create the single executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty.
 
 [Java](https://java.com) is required to run Katapult. In general, execute a jar like: 
 
@@ -60,7 +58,7 @@ Create the single executable jar via `shadowJar` (see `buildjar.sh`). All static
 java -jar <the.jar> --options...
 ```
 
-The included `main` function runs the sample api/app. Kindly refer to the source for command-line options.
+`example.Main` runs a sample api/app. Kindly refer to the source for command-line options.
 
 ### Development
 
@@ -68,21 +66,15 @@ The included API & app are for demonstration purposes. As Katapult is still very
 
 Consider [forking](https://help.github.com/articles/fork-a-repo/) Katapult and developing your app/api in a different directory structure. [Sync your fork](https://help.github.com/articles/syncing-a-fork/) for Katapult updates (and beware of breaking changes).
 
-> Contributions (pull requests, issue reports, general advice) are most welcome!
-
 ## Javalin Server
 
 The `api` project integrates a number of components for building a REST API and hosting static pages (such as the Vue app).
 
-- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup.
+- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup, such as adding API route handlers.
 
-- **REST API:** Katapult augments Javalin's API handling with a convenient `Action` helper, which leverages Kotlin data classes for request/response handlers.
+- **Endpoints:** Katapult helps isolate endpoint implementations in `Endpoint` classes. Routes hand off requests to Endpoint implementations. Endpoints can define API parameters in their constructors, which are parsed from the request body via JavalinJson.
 
   > REST parameters sent by the client are sent as JSON in the body of the request - not part of the URL. Javalin supports URL arguments, but Katapult does not (yet?) use this.
- 
-- **Sessions:** (Experimental) `UserSession` and `SessionData` data class to aid in session management. Sessions can be stored to files.
-
-  > Everything is experimental, sessions especially!
 
 - **Database/DAO:** Experimenting with [Exposed](https://github.com/JetBrains/Exposed) for data access.
  
@@ -90,11 +82,9 @@ The `api` project integrates a number of components for building a REST API and 
     
     - Sample `UserDao`, which further simplifies and isolates business logic from Exposed library.
 
-- **HTTPS:** Katapult reads `fullchain.pem` and `privkey.pem` as provided by Let's Encrypt (and maybe other certificate authorities).
-
-  > **No messing around with JKS files!** 
+- **HTTPS:** Katapult reads `fullchain.pem` and `privkey.pem` as provided by Let's Encrypt (and maybe other certificate authorities). _No messing around with `jks` files!_
   
-  Obtaining SSL certificate files (eg, from Let's Encrypt) is outside the scope of this project.
+  Explaining how to obtain SSL certificate files (eg, from Let's Encrypt) is outside the scope of this project.
   
 - **Templating:** Javalin supports template engines for server-rendered HTML. An example [Mustache](https://mustache.github.io/) Katapult module is provided.
 
@@ -115,10 +105,15 @@ If bundling is not desirable, the Vue app could be hosted separately.
 - Bring the `app` and `api` projects together under one build environment (maybe by having gradle run the yarn scripts)
 - Rewrite `build.gradle` in Kotlin script
 - Cross-compile the Kotlin data classes used by the API for both JS and JVM, so the same implementations can be sent and received on each side
-- Allow for TypeScript `.ts` files, as well as `<script lang="ts">` in `.vue` files
+- Allow for TypeScript `.ts` files, as well as `<script lang="ts">` in `.vue` files (preliminary `tsconfig.json` added, but not yet well-tested)
 - Integrated automatic Let's Encrypt certificate registration/renewal
+- Module dependency resolution
+- Meaningful unit tests
+- Get vue-router to work (even in multi-page mode), using Javalin's single-page-app configuration
 
 Overall, it would be desirable to develop modules for more common use-cases, such as file upload, user signup, email verification, etc, etc.
+
+> Contributions (pull requests, issue reports, general advice) are most welcome!
 
 ## License
 

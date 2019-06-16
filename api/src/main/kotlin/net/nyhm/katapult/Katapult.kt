@@ -47,6 +47,6 @@ class Katapult(
 
   fun stop() {
     app?.stop()
-    //app = null // TODO: Define whether ok for modules to be re-initialized (upon if start() called again)
+    //app = null // TODO: Define whether ok for modules to be re-initialized (if start() called again)
   }
 }

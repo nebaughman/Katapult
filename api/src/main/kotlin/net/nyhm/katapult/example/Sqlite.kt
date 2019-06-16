@@ -1,4 +1,4 @@
-package net.nyhm.katapult.db
+package net.nyhm.katapult.example
 
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.ModuleSpec
@@ -10,9 +10,9 @@ import java.sql.Connection
 /**
  * Initializes a SQLite db
  */
-class SqliteModule(val dataDir: File): KatapultModule {
+class SqliteModule(val dbFile: File): KatapultModule {
   override fun initialize(spec: ModuleSpec) {
-    val url = "jdbc:sqlite:${dataDir}/data.sqlite" // TODO: parameterize db name
+    val url = "jdbc:sqlite:${dbFile}"
     Database.connect(url, "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
     // sqlite requires serializable isolation level
