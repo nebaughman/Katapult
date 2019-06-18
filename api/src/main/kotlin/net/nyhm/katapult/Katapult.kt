@@ -1,28 +1,36 @@
 package net.nyhm.katapult
 
 import io.javalin.Javalin
-import io.javalin.core.util.JettyServerUtil
+import io.javalin.core.JavalinConfig
 import org.eclipse.jetty.server.Server
 
-data class ModuleSpec(
-    val app: Javalin,
-    val server: Server
-)
-
+/**
+ * A module has the opportunity to configure Javalin.
+ * Each of the [config] methods is called once per module.
+ * Each has a no-op default implementation, if not needed.
+ */
 interface KatapultModule {
   /**
-   * Called once per module, before the server starts.
-   * To augment the internal Jetty Server, use the given server instance.
-   * Do not replace the app's server (ie, do not call app.server(..)).
-   * Post-initialization, this server instance will be set into the Javalin app.
+   * Configure the [JavalinConfig].
+   * Do not use [JavalinConfig.server]; instead use the `config(Server)` method.
    */
-  fun initialize(spec: ModuleSpec)
+  fun config(config: JavalinConfig) {}
+
+  /**
+   * Configure the underlying Jetty [Server].
+   */
+  fun config(server: Server) {}
+
+  /**
+   * Configure the [Javalin] app instance.
+   * This is where to add routes, for example.
+   */
+  fun config(app: Javalin) {}
 }
 
 class Katapult(
     private vararg val modules: KatapultModule
 ) {
-
   /**
    * The active Javalin server instance
    */
@@ -33,18 +41,21 @@ class Katapult(
    */
   fun start() {
     if (app != null) throw IllegalStateException("Already started") // only once
-
-    // Allow modules to manipulate the Jetty Server instance.
-    // Start with the Javalin default server configuration.
-    val server = JettyServerUtil.defaultServer()
-    val app = Javalin.create().apply { disableStartupBanner() }
-    val spec = ModuleSpec(app, server)
-    modules.forEach { it.initialize(spec) }
-    app.server { server } // replace Jetty server
+    val app = Javalin.create { config ->
+      val server = Server() // allow modules to manipulate the Jetty server instance
+      config.showJavalinBanner = false
+      modules.forEach { it.config(config) }
+      modules.forEach { it.config(server) }
+      config.server { server } // set the (potentially customized) Jetty server
+    }
+    modules.forEach { it.config(app) }
     app.start() // http(s) connector(s) specif(ies|y) port(s)
     this.app = app // prior exception will not set app
   }
 
+  /**
+   * Stop the Javalin app
+   */
   fun stop() {
     app?.stop()
     //app = null // TODO: Define whether ok for modules to be re-initialized (if start() called again)

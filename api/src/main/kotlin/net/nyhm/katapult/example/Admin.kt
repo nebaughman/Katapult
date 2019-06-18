@@ -1,10 +1,11 @@
 package net.nyhm.katapult.example
 
-import io.javalin.BadRequestResponse
-import io.javalin.Context
-import io.javalin.Handler
-import io.javalin.UnauthorizedResponse
+import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.Context
+import io.javalin.http.Handler
+import io.javalin.http.UnauthorizedResponse
 import net.nyhm.katapult.*
 import net.nyhm.katapult.Endpoint
 import net.nyhm.katapult.process
@@ -24,8 +25,8 @@ object AdminModule: KatapultModule {
     before("/admin/*", AdminFilter { ctx -> ctx.redirect("/login") })
   }
 
-  override fun initialize(spec: ModuleSpec) {
-    spec.app.routes(routes)
+  override fun config(app: Javalin) {
+    app.routes(routes)
   }
 }
 

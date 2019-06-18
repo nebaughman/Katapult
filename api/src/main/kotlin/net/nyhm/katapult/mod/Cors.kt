@@ -1,16 +1,16 @@
 package net.nyhm.katapult.mod
 
+import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.ModuleSpec
 
 class CorsModule(vararg val origins: String): KatapultModule {
-  override fun initialize(spec: ModuleSpec) {
-    spec.app.enableCorsForOrigin(*origins)
+  override fun config(config: JavalinConfig) {
+    config.enableCorsForOrigin(*origins)
   }
 }
 
 object CorsAllOrigins: KatapultModule {
-  override fun initialize(spec: ModuleSpec) {
-    spec.app.enableCorsForAllOrigins()
+  override fun config(config: JavalinConfig) {
+    config.enableCorsForAllOrigins()
   }
 }

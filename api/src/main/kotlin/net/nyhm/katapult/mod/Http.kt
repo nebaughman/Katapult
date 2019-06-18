@@ -1,9 +1,10 @@
 package net.nyhm.katapult.mod
 
-import io.javalin.Context
+import io.javalin.Javalin
+import io.javalin.http.Context
 import io.javalin.apibuilder.ApiBuilder
 import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.ModuleSpec
+import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import java.net.URI
 
@@ -11,9 +12,9 @@ import java.net.URI
  * Adds an HTTP server listening port
  */
 class HttpModule(val port: Int = 80): KatapultModule {
-  override fun initialize(spec: ModuleSpec) {
-    spec.server.addConnector(
-        ServerConnector(spec.server).also { it.port = port }
+  override fun config(server: Server) {
+    server.addConnector(
+        ServerConnector(server).also { it.port = port }
     )
   }
 }
@@ -27,8 +28,8 @@ class RedirectModule(
     val targetPort: Int,
     val targetScheme: String = "http"
 ): KatapultModule {
-  override fun initialize(spec: ModuleSpec) {
-    spec.app.routes {
+  override fun config(app: Javalin) {
+    app.routes {
       ApiBuilder.before { ctx ->
         if (predicate.invoke(ctx)) {
           val url = URI(ctx.url()).let {

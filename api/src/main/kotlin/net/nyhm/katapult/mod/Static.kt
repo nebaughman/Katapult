@@ -1,17 +1,18 @@
 package net.nyhm.katapult.mod
 
+import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.ModuleSpec
 
 /**
  * This module enables static file serving
  */
 open class StaticFilesModule(val path: String): KatapultModule {
-  override fun initialize(spec: ModuleSpec) {
-    spec.app.enableStaticFiles(path)
+  override fun config(config: JavalinConfig) {
+    config.addStaticFiles(path)
   }
 }
 
+// TODO: also addSinglePageRoot
 /**
  * Serves an embedded app (Vue-Cli) from resources/app
  */

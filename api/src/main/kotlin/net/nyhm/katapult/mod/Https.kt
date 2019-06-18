@@ -1,7 +1,7 @@
 package net.nyhm.katapult.mod
 
 import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.ModuleSpec
+import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import java.io.File
@@ -22,8 +22,8 @@ class HttpsModule(
     val httpsPort: Int = 443
 ): KatapultModule {
 
-  override fun initialize(spec: ModuleSpec) {
-    spec.server.apply {
+  override fun config(server: Server) {
+    server.apply {
       addConnector(
           ServerConnector(this, sslContextFactory()).also {
             it.port = httpsPort
@@ -37,7 +37,7 @@ class HttpsModule(
    * https://github.com/tipsy/javalin/blob/master/src/test/java/io/javalin/examples/HelloWorldSecure.java
    */
   private fun sslContextFactory(): SslContextFactory {
-    val sslContextFactory = SslContextFactory()
+    val sslContextFactory = SslContextFactory.Server()
     val storePass = UUID.randomUUID().toString()
     sslContextFactory.keyStore = HttpsUtil.loadKeystore(
         File(dataDir, "fullchain.pem"),

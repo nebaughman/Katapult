@@ -1,6 +1,6 @@
 package net.nyhm.katapult
 
-import io.javalin.Context
+import io.javalin.http.Context
 
 /**
  * Endpoint provides a convenience interface for implementing api endpoints.

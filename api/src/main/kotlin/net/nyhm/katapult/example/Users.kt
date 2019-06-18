@@ -3,10 +3,10 @@ package net.nyhm.katapult.example
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
-import io.javalin.security.Role
+import io.javalin.Javalin
+import io.javalin.core.security.Role
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.Log
-import net.nyhm.katapult.ModuleSpec
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -23,7 +23,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  */
 class UsersModule(private val hash: (String) -> String): KatapultModule {
 
-  override fun initialize(spec: ModuleSpec) {
+  override fun config(app: Javalin) {
     transaction {
       SchemaUtils.create(Users)
     }
@@ -40,7 +40,7 @@ class UsersModule(private val hash: (String) -> String): KatapultModule {
     // upon login, if admin user's hash matches this, then force pw change;
     // alternatively, add flag to user to force pw change on next login
 
-    spec.app.attribute(UserDao::class.java, UserDao)
+    app.attribute(UserDao::class.java, UserDao)
   }
 }
 

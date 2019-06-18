@@ -1,7 +1,7 @@
 package net.nyhm.katapult.mod
 
+import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.ModuleSpec
 import org.eclipse.jetty.server.session.DefaultSessionCache
 import org.eclipse.jetty.server.session.FileSessionDataStore
 import org.eclipse.jetty.server.session.SessionHandler
@@ -12,8 +12,8 @@ import java.io.File
  * Sessions and data must be [Serializable]
  */
 class FileSessionHandlerModule(val dataDir: File): KatapultModule {
-  override fun initialize(spec: ModuleSpec) {
-    spec.app.sessionHandler { fileSessionHandler(dataDir) }
+  override fun config(config: JavalinConfig) {
+    config.sessionHandler { fileSessionHandler(dataDir) }
   }
 
   /**

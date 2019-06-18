@@ -1,12 +1,12 @@
 package net.nyhm.katapult.example
 
-import io.javalin.BadRequestResponse
-import io.javalin.Context
-import io.javalin.UnauthorizedResponse
+import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.Context
+import io.javalin.http.UnauthorizedResponse
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.Log
-import net.nyhm.katapult.ModuleSpec
 import net.nyhm.katapult.Endpoint
 import net.nyhm.katapult.process
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -36,9 +36,9 @@ class AuthApi(
     }
   }
 
-  override fun initialize(spec: ModuleSpec) {
-    spec.app.routes(routes)
-    //spec.app.attribute(AuthDao::class.java, TempUserStore)
+  override fun config(app: Javalin) {
+    app.routes(routes)
+    //app.attribute(AuthDao::class.java, TempUserStore)
   }
 }
 
