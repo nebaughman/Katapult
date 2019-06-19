@@ -21,7 +21,8 @@
     "jquery": "^3.3.1",
     "loglevel": "^1.6.1",
     "popper.js": "^1.14.6",
-    "vue": "^2.5.17"
+    "vue": "^2.5.17",
+    "vue-router": "^3.0.6"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.2.0",

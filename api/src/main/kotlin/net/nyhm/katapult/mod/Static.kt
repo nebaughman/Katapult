@@ -6,18 +6,8 @@ import net.nyhm.katapult.KatapultModule
 /**
  * This module enables static file serving
  */
-open class StaticFilesModule(val path: String): KatapultModule {
+open class StaticFilesModule(vararg val paths: String): KatapultModule {
   override fun config(config: JavalinConfig) {
-    config.addStaticFiles(path)
+    paths.forEach { config.addStaticFiles(it) }
   }
 }
-
-// TODO: also addSinglePageRoot
-/**
- * Serves an embedded app (Vue-Cli) from resources/app
- */
-object AppModule: StaticFilesModule("/app")
-//
-// TODO: Since Vue-Cli production build includes versioned bundles, consider serving
-// from 'immutable' path, so Javalin sets long cache expiration:
-// https://javalin.io/documentation#static-files

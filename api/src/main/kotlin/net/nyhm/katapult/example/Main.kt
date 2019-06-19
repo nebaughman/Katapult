@@ -78,6 +78,7 @@ class Cli: CliktCommand(
         AuthApi(true),
         AdminModule,
         SampleErrorModule,
+        RequestLog,
         FileSessionHandlerModule(dataDir)
     )
 

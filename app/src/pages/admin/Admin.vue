@@ -1,22 +1,16 @@
 <template>
   <div>
     <Navbar class="mb-4"/>
-    <div class="container-fluid">
-      <div class="card-columns">
-        <Card title="Users"><Users/></Card>
-      </div>
-    </div>
+    <router-view/>
   </div>
 </template>
 
 <script>
   import Navbar from "../../common/Navbar"
-  import Users from "./Users"
-  import Card from "./Card"
 
   export default {
     name: "Admin",
-    components: {Navbar, Users, Card},
+    components: {Navbar},
   }
 </script>
 
