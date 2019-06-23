@@ -1,16 +1,16 @@
 <template>
   <div>
-    <Navbar class="mb-4"/>
+    <NavBar class="mb-4"/>
     <router-view/>
   </div>
 </template>
 
 <script>
-  import Navbar from "../../common/Navbar"
+  import NavBar from "../../common/NavBar"
 
   export default {
     name: "Admin",
-    components: {Navbar},
+    components: {NavBar},
   }
 </script>
 

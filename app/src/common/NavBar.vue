@@ -5,14 +5,10 @@
     <template v-if="isAdmin">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <!--<a href="/admin" class="nav-link">Admin</a>-->
-          <a href="/admin" class="nav-link">Admin</a>
-          <!--<router-link to="/admin" class="nav-link">Admin</router-link>-->
+          <nav-link link="/admin" name="Admin"/>
         </li>
         <li class="nav-item">
-          <!--<a href="/admin/other" class="nav-link"><small>Other</small></a>-->
-          <a href="/admin/other" class="nav-link"><small>Other</small></a>
-          <!--<router-link to="/admin/other" class="nav-link"><small>Other</small></router-link>-->
+          <nav-link link="/admin/other"><small>Other</small></nav-link>
         </li>
       </ul>
     </template>
@@ -23,11 +19,12 @@
 
 <script>
   import LoginLink from "./LoginLink"
+  import NavLink from "./NavLink"
   import {LoginState} from "../common/LoginState"
 
   export default {
-    name: "Navbar",
-    components: {LoginLink},
+    name: "NavBar",
+    components: {LoginLink, NavLink},
 
     computed: {
       isAdmin() {

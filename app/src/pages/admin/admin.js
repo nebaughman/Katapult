@@ -10,14 +10,14 @@ import NotFound from "../../common/NotFound"
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
-// vue routes (paths relative to this page)
 const routes = [
-  { path: "*", component: NotFound },
-  { path: "/", component: Dashboard },
-  { path: "/other", component: Other },
+  { path: "/admin", component: Dashboard },
+  { path: "/admin/other", component: Other },
+  { path: "/admin/*", component: NotFound },
 ]
 
-export const router = new VueRouter({
+const router = new VueRouter({
+  //base: "/admin/",
   mode: "history",
   routes,
 });
