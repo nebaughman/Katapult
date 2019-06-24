@@ -136,7 +136,6 @@ This multi-page/SPA hybrid setup has some caveats, but is working, at least for 
 - Integrated automatic Let's Encrypt certificate registration/renewal
 - Module dependency resolution
 - Meaningful unit tests
-- Get vue-router to work (even in multi-page mode), using Javalin's single-page-app configuration
 
 Overall, it would be desirable to develop modules for more common use-cases, such as file upload, user signup, email verification, etc, etc.
 
