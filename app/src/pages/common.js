@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+Vue.config.productionTip = false
+
 import 'bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
 

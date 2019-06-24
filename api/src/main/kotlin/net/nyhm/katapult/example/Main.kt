@@ -73,11 +73,13 @@ class Cli: CliktCommand(
 
     val modules = mutableListOf(
         AppModule,
+        SpaModule("admin"),
         SqliteModule(File(dataDir, "data.sqlite")),
         UsersModule(Auth::hash),
         AuthApi(true),
         AdminModule,
         SampleErrorModule,
+        RequestLog,
         FileSessionHandlerModule(dataDir)
     )
 
