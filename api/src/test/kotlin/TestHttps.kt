@@ -1,5 +1,5 @@
 import net.nyhm.katapult.mod.HttpsUtil
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.io.File
 
 class TestHttps {

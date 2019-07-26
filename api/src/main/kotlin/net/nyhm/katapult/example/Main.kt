@@ -71,33 +71,52 @@ class Cli: CliktCommand(
 
     dataDir.mkdir() // TODO: mkdirs()
 
-    val modules = mutableListOf(
-        AppModule,
-        SpaModule("admin"),
-        SqliteModule(File(dataDir, "data.sqlite")),
-        UsersModule(Auth::hash),
-        AuthApi(true),
-        AdminModule,
-        SampleErrorModule,
-        RequestLog,
-        FileSessionHandlerModule(dataDir)
+    val spec = mutableListOf(
+        SpaSpec(listOf("admin")),
+        SqliteSpec(File(dataDir, "data.sqlite")),
+        UsersSpec(Auth::hash),
+        AuthSpec(true),
+        UserDao
     )
 
-    if (http) modules.add(HttpModule(httpPort))
-    if (https) modules.add(HttpsModule(dataDir, httpsPort))
+    val mods = mutableListOf(
+        AppModule::class,
+        SpaModule::class,
+        SqliteModule::class,
+        UsersModule::class,
+        AuthApi::class,
+        AdminModule::class,
+        SampleErrorModule::class,
+        RequestLog::class
+    )
+
+    // persist sessions in file store
+    if (sessionFiles) {
+      spec.add(SessionSpec(dataDir))
+      mods.add(FileSessionHandlerModule::class)
+    }
+
+    if (http) {
+      spec.add(HttpSpec(httpPort))
+      mods.add(HttpModule::class)
+    }
+
+    if (https) {
+      spec.add(HttpsSpec(dataDir, httpsPort))
+      mods.add(HttpsModule::class)
+    }
 
     // if both http & https, redirect http to https port
     if (http && https) {
-      modules.add(RedirectModule(
+      spec.add(RedirectSpec(
           { it.scheme() == "http" && it.port() == httpPort },
-          httpsPort, "https"
+          httpsPort,
+          "https"
       ))
+      mods.add(RedirectModule::class)
     }
 
-    // persist sessions in file store
-    if (sessionFiles) modules.add(FileSessionHandlerModule(dataDir))
-
-    Katapult(*modules.toTypedArray()).start()
+    Katapult(spec, mods).start()
   }
 }
 

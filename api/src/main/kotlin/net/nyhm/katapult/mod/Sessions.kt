@@ -7,13 +7,17 @@ import org.eclipse.jetty.server.session.FileSessionDataStore
 import org.eclipse.jetty.server.session.SessionHandler
 import java.io.File
 
+data class SessionSpec(
+    val dataDir: File
+)
+
 /**
  * Persists http sessions in files in dataDir/sessions/
  * Sessions and data must be [Serializable]
  */
-class FileSessionHandlerModule(val dataDir: File): KatapultModule {
+class FileSessionHandlerModule(val spec: SessionSpec): KatapultModule {
   override fun config(config: JavalinConfig) {
-    config.sessionHandler { fileSessionHandler(dataDir) }
+    config.sessionHandler { fileSessionHandler(spec.dataDir) }
   }
 
   /**

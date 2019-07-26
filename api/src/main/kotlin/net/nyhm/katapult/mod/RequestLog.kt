@@ -6,6 +6,8 @@ import net.nyhm.katapult.Log
 
 object RequestLog: KatapultModule {
   override fun config(config: JavalinConfig) {
-    config.requestLogger { ctx, ms -> Log.info(this) { ctx.path() } }
+    config.requestLogger { ctx, ms -> Log.info(this) {
+      "${ctx.method()} ${ctx.path()}"
+    } }
   }
 }

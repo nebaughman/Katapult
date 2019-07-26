@@ -6,6 +6,11 @@ import io.javalin.apibuilder.ApiBuilder
 import io.javalin.plugin.rendering.template.JavalinMustache
 import net.nyhm.katapult.KatapultModule
 
+data class MustacheSpec(
+    val templatePath: String = "/template",
+    val routePaths: Iterable<String>
+)
+
 /**
  * Serve mustache templates.
  * Template files are to be stored in resources under the given templatePath.
@@ -19,14 +24,11 @@ import net.nyhm.katapult.KatapultModule
  * Notice: This is very particular and not well tested. Like everything,
  * it's for demonstration and experimentation... but even more so in this case.
  */
-class MustacheModule(
-    val templatePath: String = "/template",
-    vararg val routePaths: String
-): KatapultModule {
+class MustacheModule(val spec: MustacheSpec): KatapultModule {
   override fun config(app: Javalin) {
     JavalinMustache.configure(DefaultMustacheFactory())
-    routePaths.forEach {
-      val path = "$templatePath/$it.mustache" // hacky
+    spec.routePaths.forEach {
+      val path = "${spec.templatePath}/$it.mustache" // hacky
       app.routes {
         ApiBuilder.get(it) { ctx -> ctx.render(path) }
       }

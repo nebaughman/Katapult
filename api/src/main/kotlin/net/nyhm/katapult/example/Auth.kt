@@ -13,20 +13,22 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.io.Serializable
 
+data class AuthSpec(
+    val allowRegistration: Boolean = true
+)
+
 /**
  * Implements a sample session-based (non-REST) authentication api.
  */
-class AuthApi(
-    private val allowRegistration: Boolean = true
-): KatapultModule {
+class AuthApi(val spec: AuthSpec, val userDao: UserDao): KatapultModule {
 
   private val routes = {
     path("/api/auth") {
-      get("login") { it.process(GetLogin) }
-      post("login") { it.process<Login>() }
+      get("login") { it.process(GetLogin(userDao)) }
+      post("login") { it.process(Login(userDao)) }
       get("logout") { it.authSession().logout() }
-      post("passwd") { it.process<ChangePassword>() }
-      if (allowRegistration) post("register") { it.process<Register>() }
+      post("passwd") { it.process(ChangePassword(userDao)) }
+      if (spec.allowRegistration) post("register") { it.process(Register(userDao)) }
     }
 
     // handler for logout link (rather than api call)
@@ -34,6 +36,9 @@ class AuthApi(
       ctx.authSession().logout()
       ctx.redirect("/")
     }
+
+    // logout before loading login page
+    before("/login") { it.authSession().logout() }
   }
 
   override fun config(app: Javalin) {
@@ -108,23 +113,21 @@ object Auth {
 /**
  * Get the currently logged-in user info (null if no logged in user)
  */
-object GetLogin: Endpoint {
+class GetLogin(val userDao: UserDao): Endpoint {
   override fun invoke(ctx: Context): UserInfo? {
     val login = ctx.authSession().user?.name ?: return null
-    //val authDao = ctx.appAttribute(AuthDao::class.java)
-    val userDao = ctx.appAttribute(UserDao::class.java)
+    //val userDao = ctx.appAttribute(UserDao::class.java)
     return userDao.findName(login)?.let { UserInfo(it) }
   }
 }
 
-data class Login(val user: String, val pass: String): Endpoint {
+class Login(val userDao: UserDao): Endpoint {
   override fun invoke(ctx: Context): LoginResponse {
     val session = ctx.authSession()
     session.logout()
-    val creds = Creds(user, pass)
-    //val authDao = ctx.appAttribute(AuthDao::class.java)
-    val userDao = ctx.appAttribute(UserDao::class.java)
-    val user = userDao.findName(user) ?: throw UnauthorizedResponse("No such user")
+    val creds = ctx.body<Creds>()
+    //val userDao = ctx.appAttribute(UserDao::class.java)
+    val user = userDao.findName(creds.user) ?: throw UnauthorizedResponse("No such user")
     if (!Auth.verify(user, creds)) throw UnauthorizedResponse("Invalid password")
     session.login(user)
     Log.info(this) { "Login ${user.name}" }
@@ -132,25 +135,36 @@ data class Login(val user: String, val pass: String): Endpoint {
   }
 }
 
-data class ChangePassword(val oldPass: String, val newPass: String): Endpoint {
+data class ChangePasswordData(
+    val oldPass: String,
+    val newPass: String
+)
+
+class ChangePassword(val userDao: UserDao): Endpoint {
   override fun invoke(ctx: Context) {
+    val data = ctx.body<ChangePasswordData>()
     val login = ctx.authSession().user?.name ?: throw UnauthorizedResponse()
-    //val authDao = ctx.appAttribute(AuthDao::class.java)
-    val userDao = ctx.appAttribute(UserDao::class.java)
+    //val userDao = ctx.appAttribute(UserDao::class.java)
     val user = userDao.findName(login) ?: throw UnauthorizedResponse()
-    val creds = Creds(user.name, oldPass)
+    val creds = Creds(user.name, data.oldPass)
     if (!Auth.verify(user, creds)) throw UnauthorizedResponse()
-    transaction { user.pass = Auth.hash(newPass) }
+    transaction { user.pass = Auth.hash(data.newPass) }
   }
 }
 
-data class Register(val name: String, val pass: String): Endpoint {
+data class RegisterData(
+    val name: String,
+    val pass: String
+)
+
+class Register(val userDao: UserDao): Endpoint {
   override fun invoke(ctx: Context): UserInfo {
-    if (name.isEmpty()) throw BadRequestResponse("Invalid user name")
-    if (pass.isEmpty()) throw BadRequestResponse("Invalid password")
+    val data = ctx.body<RegisterData>()
+    if (data.name.isEmpty()) throw BadRequestResponse("Invalid user name")
+    if (data.pass.isEmpty()) throw BadRequestResponse("Invalid password")
     val userDao = ctx.appAttribute(UserDao::class.java)
-    if (userDao.findName(name) != null) throw BadRequestResponse("User name exists")
-    val user = userDao.create(UserData(name, Auth.hash(pass), UserRole.USER))
+    if (userDao.findName(data.name) != null) throw BadRequestResponse("User name exists")
+    val user = userDao.create(UserData(data.name, Auth.hash(data.pass), UserRole.USER))
     return UserInfo(user)
   }
 }

@@ -5,6 +5,10 @@
 
 <script>
   /**
+   * Use this to generate links _if_ using multi-page/SPA hybrid server mode,
+   * in which links may be intra-SPA Vue-Router links or links to other
+   * top-level entry points.
+   *
    * NavLink provides either a hard link or a router-link, depending on whether
    * a $router instance is active and the specified link is in the set of handled
    * routes. Make sure given links are the same format as routed links.

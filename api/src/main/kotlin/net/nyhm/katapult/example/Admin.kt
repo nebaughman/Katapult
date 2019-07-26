@@ -11,12 +11,12 @@ import net.nyhm.katapult.Endpoint
 import net.nyhm.katapult.process
 import org.jetbrains.exposed.sql.transactions.transaction
 
-object AdminModule: KatapultModule {
+class AdminModule(val userDao: UserDao): KatapultModule {
 
   val routes = {
     before("/api/admin/*", AdminFilter())
     path("/api/admin") {
-      get("users") { it.process(GetUsers) }
+      get("users") { it.process(GetUsers(userDao)) }
       post("user") { it.process<NewUser>() }
       delete("user") { it.process<RemoveUser>() }
       post("passwd") { it.process<Passwd>() }
@@ -44,8 +44,8 @@ class AdminFilter(
   }
 }
 
-object GetUsers: Endpoint {
-  override fun invoke(ctx: Context) = UserDao.getUsers()
+class GetUsers(val userDao: UserDao): Endpoint {
+  override fun invoke(ctx: Context) = userDao.getUsers()
 }
 
 data class Passwd(val user: String, val pass: String): Endpoint {

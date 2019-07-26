@@ -15,13 +15,17 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
- * Sample Users module, which initializes users table.
- * Requires a DB module to have been initialized first.
- *
  * @param hash function that takes a plaintext password and produces a hashed
  * version suitable for db storage
  */
-class UsersModule(private val hash: (String) -> String): KatapultModule {
+data class UsersSpec(
+    val hash: (String) -> String
+)
+/**
+ * Sample Users module, which initializes users table.
+ * Requires a DB module to have been initialized first.
+ */
+class UsersModule(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
 
   override fun config(app: Javalin) {
     transaction {
@@ -30,9 +34,9 @@ class UsersModule(private val hash: (String) -> String): KatapultModule {
 
     transaction {
       // create admin user with initial default password
-      if (UserDao.findName("admin") == null) {
-        val pass = hash("pass")
-        val admin = UserDao.create(UserData("admin", pass, UserRole.ADMIN))
+      if (userDao.findName("admin") == null) {
+        val pass = spec.hash("pass")
+        val admin = userDao.create(UserData("admin", pass, UserRole.ADMIN))
         Log.info(this) { "Created user ${admin.name}" }
       }
     }
@@ -40,7 +44,7 @@ class UsersModule(private val hash: (String) -> String): KatapultModule {
     // upon login, if admin user's hash matches this, then force pw change;
     // alternatively, add flag to user to force pw change on next login
 
-    app.attribute(UserDao::class.java, UserDao)
+    //app.attribute(UserDao::class.java, UserDao)
   }
 }
 

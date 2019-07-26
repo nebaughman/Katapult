@@ -7,12 +7,16 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import java.io.File
 import java.sql.Connection
 
+data class SqliteSpec(
+    val dbFile: File
+)
+
 /**
  * Initializes a SQLite db
  */
-class SqliteModule(val dbFile: File): KatapultModule {
+class SqliteModule(val spec: SqliteSpec): KatapultModule {
   override fun config(config: JavalinConfig) {
-    val url = "jdbc:sqlite:${dbFile}"
+    val url = "jdbc:sqlite:${spec.dbFile}"
     Database.connect(url, "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
     // sqlite requires serializable isolation level

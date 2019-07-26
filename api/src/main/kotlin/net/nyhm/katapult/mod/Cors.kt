@@ -3,9 +3,13 @@ package net.nyhm.katapult.mod
 import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
 
-class CorsModule(vararg val origins: String): KatapultModule {
+data class CorsSpec(
+    val origins: List<String>
+)
+
+class CorsModule(val spec: CorsSpec): KatapultModule {
   override fun config(config: JavalinConfig) {
-    config.enableCorsForOrigin(*origins)
+    config.enableCorsForOrigin(*spec.origins.toTypedArray())
   }
 }
 

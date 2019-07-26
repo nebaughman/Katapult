@@ -3,6 +3,10 @@ package net.nyhm.katapult.mod
 import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
 
+data class SpaSpec(
+    val subpages: List<String>
+)
+
 /**
  * Also see [App] for serving a bundled Vue app.
  *
@@ -22,11 +26,11 @@ import net.nyhm.katapult.KatapultModule
  * See the project README for more details (and caveats) of this configuration.
  */
 class SpaModule(
-    private vararg val subpages: String
+    val spec: SpaSpec
 ): KatapultModule {
   override fun config(config: JavalinConfig) {
     // eg, config.addSinglePageRoot("/admin", "/app/admin/index.html")
-    subpages.forEach {
+    spec.subpages.forEach {
       config.addSinglePageRoot("/$it", "/app/$it/index.html")
     }
     config.addSinglePageRoot("/", "/app/index.html")

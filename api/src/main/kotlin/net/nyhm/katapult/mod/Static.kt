@@ -3,11 +3,15 @@ package net.nyhm.katapult.mod
 import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
 
+data class StaticFilesSpec(
+    val paths: Iterable<String>
+)
+
 /**
  * This module enables static file serving
  */
-open class StaticFilesModule(vararg val paths: String): KatapultModule {
+open class StaticFilesModule(val spec: StaticFilesSpec): KatapultModule {
   override fun config(config: JavalinConfig) {
-    paths.forEach { config.addStaticFiles(it) }
+    spec.paths.forEach { config.addStaticFiles(it) }
   }
 }

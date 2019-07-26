@@ -19,7 +19,7 @@ export class Logger {
   }
 
   private format(...msgs: any) {
-    return msgs.join(', ') // TODO: better formatting
+    return msgs ? msgs.join(', ') : "" // TODO: better formatting
   }
 
 }

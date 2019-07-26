@@ -17,16 +17,18 @@ import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 
-class HttpsModule(
+data class HttpsSpec(
     val dataDir: File,
     val httpsPort: Int = 443
-): KatapultModule {
+)
+
+class HttpsModule(val spec: HttpsSpec): KatapultModule {
 
   override fun config(server: Server) {
     server.apply {
       addConnector(
           ServerConnector(this, sslContextFactory()).also {
-            it.port = httpsPort
+            it.port = spec.httpsPort
           }
       )
     }
@@ -40,8 +42,8 @@ class HttpsModule(
     val sslContextFactory = SslContextFactory.Server()
     val storePass = UUID.randomUUID().toString()
     sslContextFactory.keyStore = HttpsUtil.loadKeystore(
-        File(dataDir, "fullchain.pem"),
-        File(dataDir, "privkey.pem"),
+        File(spec.dataDir, "fullchain.pem"),
+        File(spec.dataDir, "privkey.pem"),
         storePass.toCharArray()
     )
     sslContextFactory.setKeyStorePassword(storePass)

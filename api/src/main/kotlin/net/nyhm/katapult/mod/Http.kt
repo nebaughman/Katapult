@@ -8,36 +8,42 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import java.net.URI
 
+data class HttpSpec(
+    val port: Int = 80
+)
+
 /**
  * Adds an HTTP server listening port
  */
-class HttpModule(val port: Int = 80): KatapultModule {
+class HttpModule(val spec: HttpSpec): KatapultModule {
   override fun config(server: Server) {
     server.addConnector(
-        ServerConnector(server).also { it.port = port }
+        ServerConnector(server).also { it.port = spec.port }
     )
   }
 }
+
+data class RedirectSpec(
+    val predicate: (Context) -> Boolean,
+    val targetPort: Int,
+    val targetScheme: String = "http"
+)
 
 /**
  * Adds a Javalin redirect router, which will issue a redirect to the same url at different
  * port and scheme. Use this, for example, to redirect HTTP traffic to HTTPS port.
  */
-class RedirectModule(
-    val predicate: (Context) -> Boolean,
-    val targetPort: Int,
-    val targetScheme: String = "http"
-): KatapultModule {
+class RedirectModule(val spec: RedirectSpec): KatapultModule {
   override fun config(app: Javalin) {
     app.routes {
       ApiBuilder.before { ctx ->
-        if (predicate.invoke(ctx)) {
+        if (spec.predicate.invoke(ctx)) {
           val url = URI(ctx.url()).let {
             URI(
-                targetScheme,
+                spec.targetScheme,
                 it.userInfo,
                 it.host,
-                targetPort,
+                spec.targetPort,
                 it.path,
                 it.query,
                 it.fragment
