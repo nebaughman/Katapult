@@ -4,7 +4,7 @@
 
 ## Overview
 
-The purpose of this project is to combine a number of useful libraries into a starting framework for other projects.
+The purpose of this project is to combine a number of useful libraries into a starting stack for other projects.
 
 When built, Katapult provides a single executable `jar` file that can self-serve an API (REST or session-based) and Vue Web app (single-page or multi-page).
 
@@ -39,15 +39,15 @@ Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let'
 - [Axios](https://github.com/axios/axios)
 - [Yarn](https://yarnpkg.com)
 
-> I develop on [Ubuntu](https://www.ubuntu.com/) with [IntelliJ IDEA](https://www.jetbrains.com/idea/) (Community Edition).
+> I'd like to add TypeScript to the ecosystem (for TS classes, as well as TS-based Vue components), but I don't have the configuration quite right yet.
 
 ### Project Structure
 
 Two subprojects:
 
-- The `api` project augments Javalin with a simple modular framework. Example modules are included, which help with authentication and session management, database/DAO integration (via Exposed), HTTPS support, Mustache templates, CORS headers, and static Vue app hosting.
+- The `api` project augments Javalin with a modular framework and simple dependency injection system. Example modules are included, which help with authentication and session management, database/DAO integration (via Exposed), HTTPS support, Mustache templates, CORS headers, and static Vue app hosting.
 
-- The `app` project includes a Vue-Cli app, including Bootstrap and FontAwesome, configured for multi-page mode. `yarn build` copies `dist` to the API server's `resources/app`, where it is bundled and served as static content.
+- The `app` project includes an example Vue-Cli app, including Vue Router, Bootstrap, and FontAwesome, configured as an SPA (but supporting multiple entry points). `yarn build` copies `dist` to the API server's `resources/app`, where it is bundled and served as static content.
 
 ### Deployment
 
@@ -61,7 +61,7 @@ java -jar <the.jar> --options...
 
 `example.Main` runs a sample api/app. Kindly refer to the source for command-line options.
 
-### Development
+### Extension
 
 The included API & app are for demonstration purposes. As Katapult is still very much an experimental work-in-progress, there is not a clearly defined way to utilize Katapult for other projects.
 
@@ -73,11 +73,13 @@ Javalin server with Vue app
 
 ### Javalin Server
 
-The `api` project integrates a number of components for building an API and hosting static pages (such as the Vue app).
+The `api` project integrates a number of components for building an HTTP(S) API (RESTful or otherwise) and hosting static pages (such as the Vue app).
 
-- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup, such as adding API route handlers.
+- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup, such as adding API route handlers. Modules are instantiated by Katapult, injecting dependencies at construction.
 
-- **Endpoints:** Katapult helps isolate endpoint implementations in `Endpoint` classes. Routes hand off requests to Endpoint implementations. Endpoints can define API parameters in their constructors, which are parsed from the request body via JavalinJson.
+- **Endpoints:** Katapult helps isolate endpoint implementations in `Endpoint` classes. Routes hand off requests to Endpoint implementations.
+
+ > Endpoints were previously parsed from the request body via JavalinJson, but this pattern is being replaced. Request parameters can still easily be parsed from the request body via Javalin's `ctx.body<DataClass>()`, but Katapult does not automate this, at this time (maybe later).
 
   > REST parameters sent by the client are sent as JSON in the body of the request - not part of the URL. Javalin supports URL arguments, but Katapult does not (yet?) use this.
 
@@ -85,29 +87,31 @@ The `api` project integrates a number of components for building an API and host
  
     - Sample SQLite module (should be easy to add others).
     
-    - Sample `UserDao`, which further simplifies and isolates business logic from Exposed library.
+    - Sample `UserDao`, which further simplifies and isolates business logic from Exposed library (except for Exposed `transaction`, which is kind of hard to avoid).
 
 - **HTTPS:** Katapult reads `fullchain.pem` and `privkey.pem` as provided by Let's Encrypt (and maybe other certificate authorities). _No messing around with `jks` files!_
   
-  Explaining how to obtain SSL certificate files (eg, from Let's Encrypt) is outside the scope of this project.
+  > Explaining how to obtain SSL certificate files (eg, from Let's Encrypt) is outside the scope of this project.
   
 - **Templating:** Javalin supports template engines for server-rendered HTML. An example [Mustache](https://mustache.github.io/) Katapult module is provided.
 
-- **External Data:** Server runtime data is stored in a separate data directory. This includes SQLite database, session files, SSL certificate files, etc.
+- **External Data:** The example server stores external data in a data directory. This includes SQLite database, session files, SSL certificate files, etc. Refer to the command-line options for the example server.
 
 ### Vue App
 
-The `app` project is a sample Vue-Cli app with some additional configuration (multi-page setup, Bootstrap and FontAwesome integration, Axios for ajax, etc). The Vue app itself is just an example starting point.
+The `app` project is a sample Vue-Cli SPA with some additional configuration (Bootstrap, FontAwesome, Axios, etc). The Vue app itself is just an example starting point.
 
 The primary point is that the Vue app can be served as static content from the Javalin server, allowing the whole app/api to be bundled as a single executable jar.
 
 If bundling is not desirable, the Vue app could be hosted separately.
 
-> CORS headers are supported by Javalin, but not yet configured, so hosting the API on a different domain than the app may cause cross-origin resource errors.
+> Hosting the API on a different domain from the app may require CORS headers to be configured correctly. A CORS module is provided, but has not been well tested.
 
 ### Hybrid Multi-Page Mode
 
 > This was the trickiest part to configure so far, and I found very little information on this type of setup, so here is a rather verbose description of what I've done.
+>
+> Update: This multi-mode configuration worked, but was a bit awkward. As of Katapult v0.4.0, the API & app are configured for a more traditional SPA. Note that `/login` is still a separate entrypoint, but is isolated from the main SPA, so there is no complication between server-side and client-side routing.
 
 In the example setup, the Javalin server and Vue app are configured for multi-page mode _with_ [Vue Router](https://router.vuejs.org/) support. 
 
@@ -139,7 +143,15 @@ This multi-page/SPA hybrid setup has some caveats, but is working, at least for 
 
 Overall, it would be desirable to develop modules for more common use-cases, such as file upload, user signup, email verification, etc, etc.
 
-> Contributions (pull requests, issue reports, general advice) are most welcome!
+> Advice is most welcome!
+
+## Development
+
+- This project follows a development process inspired by [nvie's GIT branching model](https://nvie.com/posts/a-successful-git-branching-model/)
+
+- The [git](https://git-scm.com/) source repository is hosted on [GitHub](https://github.com/nebaughman/Katapult)
+
+- I develop in [Ubuntu](https://www.ubuntu.com/) with [IntelliJ IDEA](https://www.jetbrains.com/idea/) (Community Edition)
 
 ## License
 
