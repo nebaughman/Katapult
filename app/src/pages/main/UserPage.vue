@@ -1,5 +1,5 @@
 <template>
-  <p>This represents an admin-only sub-page.</p>
+  <p>This is a standard User page.</p>
 </template>
 
 <script>

@@ -11,18 +11,24 @@ import net.nyhm.katapult.Endpoint
 import net.nyhm.katapult.process
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class AdminModule(val userDao: UserDao): KatapultModule {
+class AdminModule(private val userDao: UserDao): KatapultModule {
 
-  val routes = {
-    before("/api/admin/*", AdminFilter())
+  private val routes = {
+
     path("/api/admin") {
       get("users") { it.process(GetUsers(userDao)) }
-      post("user") { it.process<NewUser>() }
-      delete("user") { it.process<RemoveUser>() }
-      post("passwd") { it.process<Passwd>() }
+      post("user") { it.process(NewUser(userDao)) }
+      delete("user") { it.process(RemoveUser(userDao)) }
+      post("passwd") { it.process(Passwd(userDao)) }
     }
+
+    val adminApiFilter = UnauthorizedHandler { !it.authSession().hasRole(UserRole.ADMIN) }
+    before("/api/admin/*", adminApiFilter)
+
     // reject by redirect for admin links (rather than api)
-    before("/admin/*", AdminFilter { ctx -> ctx.redirect("/login") })
+    val adminFilter = RedirectHandler("/login") { !it.authSession().hasRole(UserRole.ADMIN) }
+    before("/admin", adminFilter)
+    before("/admin/*", adminFilter)
   }
 
   override fun config(app: Javalin) {
@@ -30,35 +36,44 @@ class AdminModule(val userDao: UserDao): KatapultModule {
   }
 }
 
-
-/**
- * Reject non-[UserRole.ADMIN] users (or if not logged in).
- * Provide an optional reject handler (throws [UnauthorizedResponse] by default).
- */
-class AdminFilter(
-    val rejectHandler: (Context) -> Unit = { throw UnauthorizedResponse() }
-): Handler {
-  override fun handle(ctx: Context) {
-    val role = ctx.authSession().user?.role
-    if (role != UserRole.ADMIN) rejectHandler(ctx)
-  }
-}
-
 class GetUsers(val userDao: UserDao): Endpoint {
   override fun invoke(ctx: Context) = userDao.getUsers()
 }
 
-data class Passwd(val user: String, val pass: String): Endpoint {
-  override fun invoke(ctx: Context) = transaction {
-    UserDao.findName(user)?.let { it.pass = Auth.hash(pass) } ?: BadRequestResponse()
+data class PasswdData(
+    val user: String,
+    val pass: String
+)
+
+class Passwd(val userDao: UserDao): Endpoint {
+  override fun invoke(ctx: Context) {
+    val data = ctx.body<PasswdData>()
+    transaction {
+      userDao.findName(data.user)?.let { it.pass = Auth.hash(data.pass) } ?: BadRequestResponse()
+    }
   }
 }
 
-data class NewUser(val name: String, val pass: String, val role: UserRole): Endpoint {
-  override fun invoke(ctx: Context) =
-      UserDao.create(UserData(name, Auth.hash(pass), role))
+data class NewUserData(
+    val name: String,
+    val pass: String,
+    val role: UserRole
+)
+
+class NewUser(val userDao: UserDao): Endpoint {
+  override fun invoke(ctx: Context) {
+    val data = ctx.body<NewUserData>()
+    userDao.create(UserData(data.name, Auth.hash(data.pass), data.role))
+  }
 }
 
-data class RemoveUser(val name: String): Endpoint {
-  override fun invoke(ctx: Context) = UserDao.remove(name)
+data class RemoveData(
+    val name: String
+)
+
+class RemoveUser(val userDao: UserDao): Endpoint {
+  override fun invoke(ctx: Context) {
+    val data = ctx.body<RemoveData>()
+    userDao.remove(data.name)
+  }
 }

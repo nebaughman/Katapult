@@ -8,7 +8,7 @@
 </template>
 
 <script>
-  import {LoginState} from "./LoginState"
+  import {LoginState} from "@/state/LoginState"
 
   export default {
     name: "LoginLink",

@@ -7,6 +7,7 @@
           <td class="align-middle">{{ user.role }}</td>
           <td class="text-right align-middle w-100">
             <ConfirmButton
+              v-show="deletable(user)"
               class="py-0"
               confirmMessage="Delete?"
               @click="remove(user.name)"
@@ -28,10 +29,10 @@
 </template>
 
 <script>
-  import {Store} from "./Store"
+  import {AdminState} from "@/state/AdminState"
   import AddUser from "./AddUser"
   import Passwd from "./Passwd"
-  import ConfirmButton from "../../common/ConfirmButton"
+  import ConfirmButton from "@/common/ConfirmButton"
 
   export default {
     name: "Users",
@@ -39,17 +40,17 @@
 
     computed: {
       users() {
-        return Store.users
+        return AdminState.users
       },
     },
 
     methods: {
       remove(name) {
-        Store.removeUser(name)
+        AdminState.removeUser(name)
       },
 
       deletable(user) {
-        return user.name !== (Store.user ? Store.user.name : null)
+        return user.name !== (AdminState.user ? AdminState.user.name : null)
       },
     },
   }

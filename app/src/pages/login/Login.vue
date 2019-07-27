@@ -53,8 +53,8 @@
 </template>
 
 <script>
-  import {LoginState} from "../../common/LoginState"
-  import * as log from "loglevel"
+  import {Api} from "@/state/Api"
+  import {Log} from "@/util/Log"
 
   export default {
     name: "Login",
@@ -77,18 +77,14 @@
     methods: {
       login() {
         this.disabled = true
-        LoginState.performLogin(this.user, this.pass).then(response => {
-          if (response.data.login) {
-            if (response.data.redirect) {
-              window.location.href = response.data.redirect
-            } else {
-              window.location.href = '/'
-            }
+        Api.login(this.user, this.pass).then(login => {
+          if (login.login && login.user) {
+            window.location.href = '/'
           } else {
             this.error = 'Unable to log in'
           }
         }).catch(error => {
-          log.warn(error)
+          Log.warn(error)
           this.error = 'Unable to log in'
         }).finally(() => {
           this.disabled = false

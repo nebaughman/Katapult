@@ -37,8 +37,10 @@
 </template>
 
 <script>
-  import {Store} from "./Store"
-  import axios from "axios"
+  import {LoginState} from "@/state/LoginState"
+  import {AdminState} from "@/state/AdminState"
+  import {Api} from "@/state/Api"
+  import {Log} from "@/util/Log"
 
   export default {
     name: "Passwd",
@@ -58,11 +60,11 @@
       },
 
       users() {
-        return Store.users
+        return AdminState.users
       },
 
       currentUser() {
-        return Store.user ? Store.user.name : null
+        return LoginState.user ? LoginState.user.name : null
       },
     },
 
@@ -73,12 +75,12 @@
           user: this.user,
           pass: this.pass,
         }
-        axios.post("/api/admin/passwd", data).then(response => {
+        Api.passwd(this.user, this.pass).then(response => {
           this.pass = ''
           this.conf = ''
           this.busy = false
         }).catch(error => {
-          console.log(error)
+          Log.error(error)
           this.busy = false // TODO: show error
         })
       },

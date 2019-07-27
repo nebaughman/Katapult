@@ -22,7 +22,7 @@
 </template>
 
 <script>
-  import {Store} from "./Store"
+  import {AdminState} from "@/state/AdminState"
 
   export default {
     name: "AddUser",
@@ -43,7 +43,7 @@
 
     methods: {
       addUser() {
-        Store.addUser(this.name, this.pass, this.role)
+        AdminState.addUser(this.name, this.pass, this.role)
         this.name = ''
         this.pass = ''
         this.role = 'user'

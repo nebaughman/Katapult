@@ -1,17 +1,21 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a href="/" class="navbar-brand">Katapult</a>
+    <href to="/" class="navbar-brand">Katapult</href>
 
-    <template v-if="isAdmin">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <nav-link link="/admin" name="Admin"/>
-        </li>
-        <li class="nav-item">
-          <nav-link link="/admin/other"><small>Other</small></nav-link>
-        </li>
-      </ul>
-    </template>
+    <ul v-if="user" class="navbar-nav">
+      <li class="nav-item">
+        <href to="/user" name="User" class="nav-link"/>
+      </li>
+    </ul>
+
+    <ul v-if="isAdmin" class="navbar-nav">
+      <li class="nav-item">
+        <href to="/admin" name="Admin" class="nav-link"/>
+      </li>
+      <li class="nav-item">
+        <href to="/admin/other" class="nav-link"><small>Other</small></href>
+      </li>
+    </ul>
 
     <LoginLink class="ml-auto text-muted"/>
   </nav>
@@ -19,14 +23,18 @@
 
 <script>
   import LoginLink from "./LoginLink"
-  import NavLink from "./NavLink"
-  import {LoginState} from "../common/LoginState"
+  import {LoginState} from "@/state/LoginState"
+  import Href from "@/util/Href"
 
   export default {
     name: "NavBar",
-    components: {LoginLink, NavLink},
+    components: {LoginLink, Href},
 
     computed: {
+      user() {
+        return LoginState.user
+      },
+
       isAdmin() {
         return LoginState.isAdmin
       },

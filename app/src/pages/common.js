@@ -21,7 +21,7 @@ import axios from 'axios'
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
 import * as log from 'loglevel'
-import {Log} from '../common/Log.ts'
+import {Log} from '@/util/Log'
 
 if (process.env.NODE_ENV === "development") {
   log.setDefaultLevel('debug')

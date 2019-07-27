@@ -72,11 +72,11 @@ class Cli: CliktCommand(
     dataDir.mkdir() // TODO: mkdirs()
 
     val spec = mutableListOf(
-        SpaSpec(listOf("admin")),
+        SpaSpec(listOf()),
         SqliteSpec(File(dataDir, "data.sqlite")),
         UsersSpec(Auth::hash),
         AuthSpec(true),
-        UserDao
+        ExposedUserDao
     )
 
     val mods = mutableListOf(

@@ -71,6 +71,14 @@ interface User {
   var role: UserRole
 }
 
+interface UserDao {
+  fun create(user: User): User
+  fun getById(id: Int): User?
+  fun findName(name: String): User?
+  fun getUsers(): List<User>
+  fun remove(name: String)
+}
+
 @JsonSerialize(converter = UserConverter::class)
 data class UserData(
     override var name: String,
@@ -121,8 +129,9 @@ object Users: IntIdTable("users") {
  * Note that data objects may be fetched without a transaction, then later wrapped in a transaction
  * for mutation; or the entire operation may be wrapped in a transaction.
  */
-object UserDao {
-  fun create(user: User): User = transaction {
+object ExposedUserDao: UserDao {
+
+  override fun create(user: User): User = transaction {
     UserEntity.new {
       name = user.name
       pass = user.pass
@@ -130,17 +139,17 @@ object UserDao {
     }
   }
 
-  fun getById(id: Int): User? = transaction { UserEntity[id] }
+  override fun getById(id: Int): User? = transaction { UserEntity[id] }
 
-  fun findName(name: String): User? = transaction {
+  override fun findName(name: String): User? = transaction {
     UserEntity.find { Users.name eq name }.firstOrNull()
   }
 
-  fun getUsers(): List<User> = transaction {
+  override fun getUsers(): List<User> = transaction {
     UserEntity.all().toList()
   }
 
-  fun remove(name: String) = transaction {
+  override fun remove(name: String) = transaction {
     UserEntity.find { Users.name eq name }.firstOrNull()?.delete() ?:
       throw IllegalArgumentException("No such user")
   }

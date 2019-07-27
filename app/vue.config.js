@@ -11,12 +11,6 @@ module.exports = {
       filename: 'index.html',
     },
 
-    admin: {
-      entry: 'src/pages/admin/admin.js',
-      title: 'Admin Page',
-      filename: 'admin/index.html',
-    },
-
     login: {
       entry: 'src/pages/login/login.js',
       title: 'Login',

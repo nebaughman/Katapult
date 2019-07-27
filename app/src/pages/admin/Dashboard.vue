@@ -15,3 +15,9 @@
     components: {Users, Card},
   }
 </script>
+
+<style scoped>
+  .card-columns {
+    column-count: 2;
+  }
+</style>

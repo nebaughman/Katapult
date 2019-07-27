@@ -4,6 +4,7 @@ import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
+import io.javalin.http.Handler
 import io.javalin.http.UnauthorizedResponse
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.Log
@@ -39,11 +40,40 @@ class AuthApi(val spec: AuthSpec, val userDao: UserDao): KatapultModule {
 
     // logout before loading login page
     before("/login") { it.authSession().logout() }
+
+    before("/*", LoginFilter)
   }
 
   override fun config(app: Javalin) {
     app.routes(routes)
-    //app.attribute(AuthDao::class.java, TempUserStore)
+  }
+}
+
+/**
+ * This filter guards that a user is logged in.
+ */
+object LoginFilter: Handler {
+
+  /**
+   * Path prefixes that do not require a user to be logged in.
+   */
+  private val publicPrefixes = listOf(
+      "/login",
+      "/css",
+      "/js",
+      "/favicon.ico",
+      "/api/auth/login"
+  )
+
+  private fun isPublic(ctx: Context) = isPublic(ctx.path())
+  private fun isPublic(path: String) = publicPrefixes.any { path.startsWith(it) }
+
+  private val handler = RedirectHandler("/login") {
+    !isPublic(it) && !it.authSession().isLoggedIn()
+  }
+
+  override fun handle(ctx: Context) {
+    handler.handle(ctx)
   }
 }
 
@@ -63,9 +93,12 @@ data class AuthUser(
 data class AuthSession(
     var user: AuthUser? = null
 ): Serializable {
+
   fun logout() { user = null }
   fun login(user: AuthUser) { this.user = user }
   fun login(user: User) { login(AuthUser(user)) }
+  fun isLoggedIn() = user != null
+  fun hasRole(role: UserRole) = user?.let { it.role == role } ?: false
 
   companion object {
     private const val AUTH_SESSION_KEY = "auth_session"
@@ -162,7 +195,6 @@ class Register(val userDao: UserDao): Endpoint {
     val data = ctx.body<RegisterData>()
     if (data.name.isEmpty()) throw BadRequestResponse("Invalid user name")
     if (data.pass.isEmpty()) throw BadRequestResponse("Invalid password")
-    val userDao = ctx.appAttribute(UserDao::class.java)
     if (userDao.findName(data.name) != null) throw BadRequestResponse("User name exists")
     val user = userDao.create(UserData(data.name, Auth.hash(data.pass), UserRole.USER))
     return UserInfo(user)

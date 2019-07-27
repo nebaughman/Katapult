@@ -1,5 +1,5 @@
 <template>
-  <p>Not found</p>
+  <p>This is the Katapult <b>Not Found</b> page.</p>
 </template>
 
 <script>
