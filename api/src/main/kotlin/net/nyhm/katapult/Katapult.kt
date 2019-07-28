@@ -4,7 +4,6 @@ import io.javalin.Javalin
 import io.javalin.core.JavalinConfig
 import org.eclipse.jetty.server.Server
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
 import kotlin.reflect.full.isSubclassOf
 
 /**
@@ -34,6 +33,8 @@ interface KatapultModule {
   fun config(app: Javalin) {}
 }
 
+typealias Modules = List<KClass<out KatapultModule>>
+
 // TODO: KatapultFactory<T> with method to report KClass it produces and create(): T method.
 //  Allows an instance to be created for each request of the dependent type, and/or to
 //  postpone construction of the dependent type until requested (even if a single instance).
@@ -51,10 +52,7 @@ interface KatapultModule {
  * Module dependencies are determined by class type (either other modules
  * or config data). Dependencies must exist and must not be ambiguous.
  */
-class Katapult(
-    private val config: List<Any>,
-    private val modules: List<KClass<out KatapultModule>>
-) {
+class Katapult(val data: List<Any>, val endpoints: Endpoints, val modules: Modules) {
   /**
    * The active Javalin server instance
    */
@@ -65,7 +63,7 @@ class Katapult(
    */
   fun start() {
     if (app != null) throw IllegalStateException("Already started") // only once
-    val mods = ModuleResolver(config, modules).resolve()
+    val mods = KatapultResolver(data, endpoints, modules).resolve()
     val app = Javalin.create { config ->
       config.showJavalinBanner = false
       val server = Server() // allow modules to manipulate the Jetty server instance
@@ -74,6 +72,7 @@ class Katapult(
       config.server { server } // set the (potentially customized) Jetty server
     }
     mods.forEach { it.config(app) }
+    endpoints.register(app)
     app.start() // http(s) connector(s) specif(ies|y) port(s)
     this.app = app // prior exception will not set app
   }
@@ -88,7 +87,7 @@ class Katapult(
 }
 
 // TODO: Improve exception types & messages (more specific)
-
+/*
 internal class ModuleResolver(
     private val data: List<Any>,
     private val modules: List<KClass<out KatapultModule>>
@@ -184,5 +183,89 @@ internal class ModuleResolver(
     }
   }
 }
+*/
 
 class KatapultException(message: String, cause: Throwable? = null): Exception(message, cause)
+
+class KatapultResolver(
+    val data: List<Any>,
+    val endpoints: Endpoints,
+    val modules: Modules
+) {
+
+  fun resolve(): List<KatapultModule> {
+    val classes = mutableSetOf<KClass<*>>().apply {
+      addAll(endpoints.classes)
+      addAll(modules)
+    }
+    val resolved = resolve(data, classes)
+    val modules = mutableListOf<KatapultModule>()
+    resolved.forEach {
+      if (it is Endpoint) endpoints.resolve(it)
+      else if (it is KatapultModule) modules.add(it)
+    }
+    return modules
+  }
+
+  private fun resolve(data: List<Any>, classes: Set<KClass<*>>): List<Any> {
+
+    val unresolved = mutableListOf<KClass<*>>()
+    val resolved = mutableListOf<Any>()
+
+    resolved.addAll(data) // data implicitly resolved
+
+    // object instances automatically resolved, others unresolved
+    classes.forEach {
+      it.objectInstance?.let { resolved.add(it) } ?: unresolved.add(it)
+    }
+
+    // safety check
+    unresolved.forEach {
+      if (it.constructors.size != 1) {
+        throw KatapultException("Classes must have exactly one constructor")
+      }
+    }
+
+    // resolve zero-param constructors (redundant to below, but simple case)
+    run {
+      val iter = unresolved.listIterator()
+      while (iter.hasNext()) {
+        val fn = iter.next().constructors.first() // exactly one verified above
+        if (fn.parameters.isEmpty()) {
+          resolved.add(fn.call())
+          iter.remove() // resolved
+        }
+      }
+    }
+
+    var halt = false
+    while (!halt && unresolved.isNotEmpty()) {
+      halt = true // halt if no new resolutions
+      val iter = unresolved.listIterator()
+      while (iter.hasNext()) {
+        val fn = iter.next().constructors.first() // exactly one verified above
+        val deps = mutableListOf<Any?>()
+        fn.parameters.forEach { param ->
+          val type = param.type.classifier as KClass<*>
+          val matches = resolved.filter { it::class.isSubclassOf(type) }
+          if (matches.size > 1) {
+            throw KatapultException("$fn parameter $type fulfilled by multiple candidates: $matches")
+          }
+          deps.add(matches.firstOrNull()) // may add null
+        }
+        // if any deps are null (not found), then this class is not ready to be instantiated
+        if (deps.none { it == null }) {
+          resolved.add(fn.call(*deps.toTypedArray()))
+          iter.remove() // resolved
+          halt = false // something new resolved, keep resolving others
+        }
+      }
+    }
+    if (unresolved.isNotEmpty()) {
+      throw KatapultException("Not all dependencies resolved: $unresolved")
+    }
+
+    return resolved
+  }
+}
+

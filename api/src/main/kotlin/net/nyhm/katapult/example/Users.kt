@@ -3,7 +3,6 @@ package net.nyhm.katapult.example
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
-import io.javalin.Javalin
 import io.javalin.core.security.Role
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.Log
@@ -27,13 +26,14 @@ data class UsersSpec(
  */
 class UsersModule(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
 
-  override fun config(app: Javalin) {
+  init {
+    // create the users table
     transaction {
       SchemaUtils.create(Users)
     }
 
+    // create admin user with initial default password
     transaction {
-      // create admin user with initial default password
       if (userDao.findName("admin") == null) {
         val pass = spec.hash("pass")
         val admin = userDao.create(UserData("admin", pass, UserRole.ADMIN))
@@ -43,8 +43,6 @@ class UsersModule(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
     // TODO: Store a pre-hashed/salted default password for admin; insert this into the db;
     // upon login, if admin user's hash matches this, then force pw change;
     // alternatively, add flag to user to force pw change on next login
-
-    //app.attribute(UserDao::class.java, UserDao)
   }
 }
 

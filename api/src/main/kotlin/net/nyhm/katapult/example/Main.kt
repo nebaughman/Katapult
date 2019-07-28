@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import net.nyhm.katapult.Endpoints
 import net.nyhm.katapult.Katapult
 import net.nyhm.katapult.Log
 import net.nyhm.katapult.mod.*
@@ -71,7 +72,7 @@ class Cli: CliktCommand(
 
     dataDir.mkdir() // TODO: mkdirs()
 
-    val spec = mutableListOf(
+    val config = mutableListOf(
         SpaSpec(listOf()),
         SqliteSpec(File(dataDir, "data.sqlite")),
         UsersSpec(Auth::hash),
@@ -79,12 +80,22 @@ class Cli: CliktCommand(
         ExposedUserDao
     )
 
-    val mods = mutableListOf(
+    val endpoints = Endpoints()
+        .before("/*", LoginFilter)
+        .get("/logout", Logout::class)
+        .after("/logout", LoginRedirect::class)
+        .before("/login", Logout::class)
+        .get("/api/auth/login", GetLogin::class)
+        .post("/api/auth/login", Login::class)
+        .get("/api/auth/logout", Logout::class)
+        .post("/api/auth/passwd", ChangePassword::class)
+        .post("/api/auth/register", Register::class)
+
+    val modules = mutableListOf(
         AppModule::class,
         SpaModule::class,
         SqliteModule::class,
         UsersModule::class,
-        AuthApi::class,
         AdminModule::class,
         SampleErrorModule::class,
         RequestLog::class
@@ -92,31 +103,31 @@ class Cli: CliktCommand(
 
     // persist sessions in file store
     if (sessionFiles) {
-      spec.add(SessionSpec(dataDir))
-      mods.add(FileSessionHandlerModule::class)
+      config.add(SessionSpec(dataDir))
+      modules.add(FileSessionHandlerModule::class)
     }
 
     if (http) {
-      spec.add(HttpSpec(httpPort))
-      mods.add(HttpModule::class)
+      config.add(HttpSpec(httpPort))
+      modules.add(HttpModule::class)
     }
 
     if (https) {
-      spec.add(HttpsSpec(dataDir, httpsPort))
-      mods.add(HttpsModule::class)
+      config.add(HttpsSpec(dataDir, httpsPort))
+      modules.add(HttpsModule::class)
     }
 
     // if both http & https, redirect http to https port
     if (http && https) {
-      spec.add(RedirectSpec(
+      config.add(RedirectSpec(
           { it.scheme() == "http" && it.port() == httpPort },
           httpsPort,
           "https"
       ))
-      mods.add(RedirectModule::class)
+      modules.add(RedirectModule::class)
     }
 
-    Katapult(spec, mods).start()
+    Katapult(config, endpoints, modules).start()
   }
 }
 

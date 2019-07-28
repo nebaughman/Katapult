@@ -1,15 +1,8 @@
 package net.nyhm.katapult.example
 
-import io.javalin.Javalin
-import io.javalin.apibuilder.ApiBuilder.*
-import io.javalin.http.BadRequestResponse
-import io.javalin.http.Context
-import io.javalin.http.Handler
-import io.javalin.http.UnauthorizedResponse
-import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.Log
+import io.javalin.http.*
 import net.nyhm.katapult.Endpoint
-import net.nyhm.katapult.process
+import net.nyhm.katapult.Log
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.io.Serializable
@@ -17,37 +10,6 @@ import java.io.Serializable
 data class AuthSpec(
     val allowRegistration: Boolean = true
 )
-
-/**
- * Implements a sample session-based (non-REST) authentication api.
- */
-class AuthApi(val spec: AuthSpec, val userDao: UserDao): KatapultModule {
-
-  private val routes = {
-    path("/api/auth") {
-      get("login") { it.process(GetLogin(userDao)) }
-      post("login") { it.process(Login(userDao)) }
-      get("logout") { it.authSession().logout() }
-      post("passwd") { it.process(ChangePassword(userDao)) }
-      if (spec.allowRegistration) post("register") { it.process(Register(userDao)) }
-    }
-
-    // handler for logout link (rather than api call)
-    get("/logout") { ctx ->
-      ctx.authSession().logout()
-      ctx.redirect("/")
-    }
-
-    // logout before loading login page
-    before("/login") { it.authSession().logout() }
-
-    before("/*", LoginFilter)
-  }
-
-  override fun config(app: Javalin) {
-    app.routes(routes)
-  }
-}
 
 /**
  * This filter guards that a user is logged in.
@@ -144,12 +106,11 @@ object Auth {
 }
 
 /**
- * Get the currently logged-in user info (null if no logged in user)
+ * Get the currently logged-in user info (null if no user logged in)
  */
 class GetLogin(val userDao: UserDao): Endpoint {
   override fun invoke(ctx: Context): UserInfo? {
     val login = ctx.authSession().user?.name ?: return null
-    //val userDao = ctx.appAttribute(UserDao::class.java)
     return userDao.findName(login)?.let { UserInfo(it) }
   }
 }
@@ -159,12 +120,23 @@ class Login(val userDao: UserDao): Endpoint {
     val session = ctx.authSession()
     session.logout()
     val creds = ctx.body<Creds>()
-    //val userDao = ctx.appAttribute(UserDao::class.java)
     val user = userDao.findName(creds.user) ?: throw UnauthorizedResponse("No such user")
     if (!Auth.verify(user, creds)) throw UnauthorizedResponse("Invalid password")
     session.login(user)
     Log.info(this) { "Login ${user.name}" }
     return LoginResponse(true, UserInfo(user))
+  }
+}
+
+object Logout: Endpoint {
+  override fun invoke(ctx: Context) {
+    ctx.authSession().logout()
+  }
+}
+
+object LoginRedirect: Endpoint {
+  override fun invoke(ctx: Context) {
+    ctx.redirect("/login")
   }
 }
 
@@ -190,8 +162,9 @@ data class RegisterData(
     val pass: String
 )
 
-class Register(val userDao: UserDao): Endpoint {
+class Register(val spec: AuthSpec, val userDao: UserDao): Endpoint {
   override fun invoke(ctx: Context): UserInfo {
+    if (!spec.allowRegistration) throw MethodNotAllowedResponse("Registration not allowed", emptyMap())
     val data = ctx.body<RegisterData>()
     if (data.name.isEmpty()) throw BadRequestResponse("Invalid user name")
     if (data.pass.isEmpty()) throw BadRequestResponse("Invalid password")

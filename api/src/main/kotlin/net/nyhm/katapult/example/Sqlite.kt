@@ -1,6 +1,5 @@
 package net.nyhm.katapult.example
 
-import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -15,7 +14,7 @@ data class SqliteSpec(
  * Initializes a SQLite db
  */
 class SqliteModule(val spec: SqliteSpec): KatapultModule {
-  override fun config(config: JavalinConfig) {
+  init {
     val url = "jdbc:sqlite:${spec.dbFile}"
     Database.connect(url, "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE

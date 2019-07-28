@@ -4,10 +4,8 @@ import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
-import io.javalin.http.Handler
-import io.javalin.http.UnauthorizedResponse
-import net.nyhm.katapult.*
 import net.nyhm.katapult.Endpoint
+import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.process
 import org.jetbrains.exposed.sql.transactions.transaction
 
