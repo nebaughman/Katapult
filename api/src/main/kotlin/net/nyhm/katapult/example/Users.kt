@@ -20,6 +20,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 data class UsersSpec(
     val hash: (String) -> String
 )
+
 /**
  * Sample Users module, which initializes users table.
  * Requires a DB module to have been initialized first.

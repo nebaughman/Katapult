@@ -9,15 +9,15 @@ import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.process
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class AdminModule(private val userDao: UserDao): KatapultModule {
+class AdminModule: KatapultModule {
 
   private val routes = {
 
     path("/api/admin") {
-      get("users") { it.process(GetUsers(userDao)) }
-      post("user") { it.process(NewUser(userDao)) }
-      delete("user") { it.process(RemoveUser(userDao)) }
-      post("passwd") { it.process(Passwd(userDao)) }
+      get("users") { it.process(GetUsers::class) }
+      post("user") { it.process(NewUser::class) }
+      delete("user") { it.process(RemoveUser::class) }
+      post("passwd") { it.process(Passwd::class) }
     }
 
     val adminApiFilter = UnauthorizedHandler { !it.authSession().hasRole(UserRole.ADMIN) }
@@ -35,7 +35,7 @@ class AdminModule(private val userDao: UserDao): KatapultModule {
 }
 
 class GetUsers(val userDao: UserDao): Endpoint {
-  override fun invoke(ctx: Context) = userDao.getUsers()
+  fun invoke() = userDao.getUsers()
 }
 
 data class PasswdData(
@@ -44,7 +44,7 @@ data class PasswdData(
 )
 
 class Passwd(val userDao: UserDao): Endpoint {
-  override fun invoke(ctx: Context) {
+  fun invoke(ctx: Context) {
     val data = ctx.body<PasswdData>()
     transaction {
       userDao.findName(data.user)?.let { it.pass = Auth.hash(data.pass) } ?: BadRequestResponse()
@@ -59,7 +59,7 @@ data class NewUserData(
 )
 
 class NewUser(val userDao: UserDao): Endpoint {
-  override fun invoke(ctx: Context) {
+  fun invoke(ctx: Context) {
     val data = ctx.body<NewUserData>()
     userDao.create(UserData(data.name, Auth.hash(data.pass), data.role))
   }
@@ -70,7 +70,7 @@ data class RemoveData(
 )
 
 class RemoveUser(val userDao: UserDao): Endpoint {
-  override fun invoke(ctx: Context) {
+  fun invoke(ctx: Context) {
     val data = ctx.body<RemoveData>()
     userDao.remove(data.name)
   }

@@ -7,9 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
-import net.nyhm.katapult.Endpoints
-import net.nyhm.katapult.Katapult
-import net.nyhm.katapult.Log
+import net.nyhm.katapult.*
 import net.nyhm.katapult.mod.*
 import java.io.File
 import java.util.*
@@ -72,29 +70,18 @@ class Cli: CliktCommand(
 
     dataDir.mkdir() // TODO: mkdirs()
 
-    val config = mutableListOf(
-        SpaSpec(listOf()),
-        SqliteSpec(File(dataDir, "data.sqlite")),
-        UsersSpec(Auth::hash),
-        AuthSpec(true),
-        ExposedUserDao
-    )
-
-    val endpoints = Endpoints()
-        .before("/*", LoginFilter)
-        .get("/logout", Logout::class)
-        .after("/logout", LoginRedirect::class)
-        .before("/login", Logout::class)
-        .get("/api/auth/login", GetLogin::class)
-        .post("/api/auth/login", Login::class)
-        .get("/api/auth/logout", Logout::class)
-        .post("/api/auth/passwd", ChangePassword::class)
-        .post("/api/auth/register", Register::class)
+    val injector = Injector()
+        .inject(SpaSpec(listOf()))
+        .inject(SqliteSpec(File(dataDir, "data.sqlite")))
+        .inject(UsersSpec(Auth::hash))
+        .inject(AuthSpec(true))
+        .inject(UserDao::class, ExposedUserDao)
 
     val modules = mutableListOf(
+        SqliteModule::class,
+        AuthModule::class,
         AppModule::class,
         SpaModule::class,
-        SqliteModule::class,
         UsersModule::class,
         AdminModule::class,
         SampleErrorModule::class,
@@ -103,23 +90,23 @@ class Cli: CliktCommand(
 
     // persist sessions in file store
     if (sessionFiles) {
-      config.add(SessionSpec(dataDir))
+      injector.inject(SessionSpec(dataDir))
       modules.add(FileSessionHandlerModule::class)
     }
 
     if (http) {
-      config.add(HttpSpec(httpPort))
+      injector.inject(HttpSpec(httpPort))
       modules.add(HttpModule::class)
     }
 
     if (https) {
-      config.add(HttpsSpec(dataDir, httpsPort))
+      injector.inject(HttpsSpec(dataDir, httpsPort))
       modules.add(HttpsModule::class)
     }
 
     // if both http & https, redirect http to https port
     if (http && https) {
-      config.add(RedirectSpec(
+      injector.inject(RedirectSpec(
           { it.scheme() == "http" && it.port() == httpPort },
           httpsPort,
           "https"
@@ -127,7 +114,7 @@ class Cli: CliktCommand(
       modules.add(RedirectModule::class)
     }
 
-    Katapult(config, endpoints, modules).start()
+    Katapult(modules, injector).start()
   }
 }
 

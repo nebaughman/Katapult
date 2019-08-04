@@ -10,8 +10,15 @@ data class SqliteSpec(
     val dbFile: File
 )
 
+// TODO: Define a DbDriver interface that any DB-based module should depend on.
+//   This module would provide a DbDriver instance.
+//   It wouldn't actually do anything, except define the dependency,
+//   so that this module would have to be started prior to those needing it.
+//   But for that to work, modules need to declare what dependencies they provide.
 /**
- * Initializes a SQLite db
+ * Initializes a SQLite db for Exposed ORM/DAO.
+ * Exposed uses a single global configuration.
+ * Modules that utilize Exposed-based data classes have an invisible dependency on this module.
  */
 class SqliteModule(val spec: SqliteSpec): KatapultModule {
   init {
