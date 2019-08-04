@@ -42,7 +42,7 @@ typealias Modules = List<KClass<out KatapultModule>>
  * Module dependencies are determined by class type (either other modules
  * or config data). Dependencies must exist and must not be ambiguous.
  */
-class Katapult(val modules: Modules, val injector: Injector) {
+class Katapult(val modules: Modules, val injector: Injector = Injector()) {
   /**
    * The active Javalin server instance
    */
@@ -51,7 +51,7 @@ class Katapult(val modules: Modules, val injector: Injector) {
   /**
    * Katapult can be started only once
    */
-  fun start() {
+  fun start() = apply {
     if (app != null) throw IllegalStateException("Already started") // only once
     val resolver = Resolver(injector)
     // modules may be dependent on one another, resolve as group
