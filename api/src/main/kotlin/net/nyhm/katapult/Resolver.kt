@@ -1,6 +1,9 @@
 package net.nyhm.katapult
 
+import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
+import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.valueParameters
 
 /**
@@ -113,20 +116,18 @@ class Resolver(private val injector: Injector) {
     return resolved // these are in dependency order
   }
 
-  /*
-  fun resolve(types: List<KClass<*>>) = types.map { resolve(it) }
-
-  fun call(obj: Any, method: String, vararg inject: Any): Any? {
-    val fn = obj::class.functions.find { it.name == method } ?:
-      throw ResolverException("Method $method not found in ${obj::class}")
+  // TODO: Params are matched by subclass in inject list, err on side of consistency with other
+  //  operations in this class, which match by strict class type?
+  fun <R> call(instance: Any, callable: KCallable<R>, inject: List<Any>): R {
     val deps = mutableListOf<Any>()
-    fn.valueParameters.forEach {
+    //callable.instanceParameter?.let { deps.add(it) }
+    deps.add(instance)
+    callable.valueParameters.forEach {
       val p = it.type.classifier as KClass<*>
       inject.find { p.isSubclassOf(it::class) }?.let { deps.add(it) } ?: deps.add(resolve(p))
     }
-    return fn.call(*deps.toTypedArray()) // TODO: test this; need to pass instance
+    return callable.call(*deps.toTypedArray())
   }
-  */
 }
 
 class ResolverException(message: String, cause: Throwable? = null): Exception(message, cause)

@@ -3,10 +3,7 @@ package net.nyhm.katapult.example
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.BadRequestResponse
-import io.javalin.http.Context
-import net.nyhm.katapult.Endpoint
-import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.process
+import net.nyhm.katapult.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class AdminModule: KatapultModule {
@@ -35,6 +32,7 @@ class AdminModule: KatapultModule {
 }
 
 class GetUsers(val userDao: UserDao): Endpoint {
+  @EndpointHandler
   fun invoke() = userDao.getUsers()
 }
 
@@ -44,8 +42,8 @@ data class PasswdData(
 )
 
 class Passwd(val userDao: UserDao): Endpoint {
-  fun invoke(ctx: Context) {
-    val data = ctx.body<PasswdData>()
+  @EndpointHandler
+  fun invoke(@Body data: PasswdData) {
     transaction {
       userDao.findName(data.user)?.let { it.pass = Auth.hash(data.pass) } ?: BadRequestResponse()
     }
@@ -59,19 +57,19 @@ data class NewUserData(
 )
 
 class NewUser(val userDao: UserDao): Endpoint {
-  fun invoke(ctx: Context) {
-    val data = ctx.body<NewUserData>()
+  @EndpointHandler
+  fun invoke(@Body data: NewUserData) {
     userDao.create(UserData(data.name, Auth.hash(data.pass), data.role))
   }
 }
 
-data class RemoveData(
+data class RemoveUserData(
     val name: String
 )
 
 class RemoveUser(val userDao: UserDao): Endpoint {
-  fun invoke(ctx: Context) {
-    val data = ctx.body<RemoveData>()
+  @EndpointHandler
+  fun invoke(@Body data: RemoveUserData) {
     userDao.remove(data.name)
   }
 }

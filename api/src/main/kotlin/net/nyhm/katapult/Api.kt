@@ -2,9 +2,13 @@ package net.nyhm.katapult
 
 import io.javalin.http.Context
 import kotlin.reflect.KClass
-import kotlin.reflect.full.functions
-import kotlin.reflect.full.isSubclassOf
-import kotlin.reflect.full.valueParameters
+import kotlin.reflect.full.*
+
+/**
+ * Report whether this context is an AJAX request.
+ * Security note: This is based on headers, which could be spoofed.
+ */
+fun Context.isAjax() = this.header("X-Requested-With") == "XMLHttpRequest"
 
 // TODO: Instead of so much loose "convention", use @Endpoint annotation that enforces
 //  these endpoint "meta" rules. Maybe @Endpoint class annotation and @Handler method,
@@ -37,11 +41,11 @@ fun Context.process(endpoint: KClass<out Endpoint>) {
   appAttribute(Processor::class.java).process(this, endpoint)
 }
 
-/**
- * Report whether this context is an AJAX request.
- * Security note: This is based on headers, which could be spoofed.
- */
-fun Context.isAjax() = this.header("X-Requested-With") == "XMLHttpRequest"
+@Target(AnnotationTarget.FUNCTION)
+annotation class EndpointHandler // TODO: Better name that doesn't clash with Javalin Handler
+
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Body
 
 class Processor(val resolver: Resolver) {
 
@@ -58,12 +62,33 @@ class Processor(val resolver: Resolver) {
   }
 
   private fun invoke(ctx: Context, endpoint: KClass<out Endpoint>) {
+
+    val handlerFn = endpoint.functions.find {
+      it.findAnnotation<EndpointHandler>() != null
+    } ?: throw KatapultException("Endpoint has no @EndpointHandler $endpoint")
+
+    val bodyParam =
+      handlerFn.valueParameters.find {
+        it.findAnnotation<Body>() != null
+      }?.let {
+        ctx.bodyAsClass((it.type.classifier as KClass<*>).java)
+      }
+
+    val inject = mutableListOf<Any>().apply {
+      add(ctx)
+      if (bodyParam != null) add(bodyParam)
+    }
+
     val inst = if (endpoint.objectInstance != null) {
       endpoint.objectInstance!!
     } else {
       resolver.resolve(endpoint)
     }
 
+    resolver.call(inst, handlerFn, inject)?.let { ctx.json(it) }
+
+
+    /*
     val fn = inst::class.functions.find { it.name == "invoke" } ?:
       throw KatapultException("Endpoint must have an invoke(..) function $endpoint")
 
@@ -85,6 +110,7 @@ class Processor(val resolver: Resolver) {
     }
 
     if (response != null) ctx.json(response)
+    */
 
     // TODO: Above enforces specific rules about Endpoint.invoke():
     //  If one param must be Context, second must be from context body;

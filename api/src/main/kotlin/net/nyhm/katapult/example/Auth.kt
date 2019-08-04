@@ -3,10 +3,7 @@ package net.nyhm.katapult.example
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.*
-import net.nyhm.katapult.Endpoint
-import net.nyhm.katapult.KatapultModule
-import net.nyhm.katapult.Log
-import net.nyhm.katapult.process
+import net.nyhm.katapult.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.io.Serializable
@@ -141,6 +138,7 @@ object Auth {
  * Get the currently logged-in user info (null if no user logged in)
  */
 class GetLogin(val userDao: UserDao): Endpoint {
+  @EndpointHandler
   fun invoke(ctx: Context): UserInfo? {
     val login = ctx.authSession().user?.name ?: return null
     return userDao.findName(login)?.let { UserInfo(it) }
@@ -148,7 +146,8 @@ class GetLogin(val userDao: UserDao): Endpoint {
 }
 
 class Login(val userDao: UserDao): Endpoint {
-  fun invoke(ctx: Context, creds: Creds): LoginResponse {
+  @EndpointHandler
+  fun invoke(ctx: Context, @Body creds: Creds): LoginResponse {
     val session = ctx.authSession()
     session.logout()
     //val creds = ctx.body<Creds>()
@@ -161,12 +160,14 @@ class Login(val userDao: UserDao): Endpoint {
 }
 
 object Logout: Endpoint {
+  @EndpointHandler
   fun invoke(ctx: Context) {
     ctx.authSession().logout()
   }
 }
 
 object LoginRedirect: Endpoint {
+  @EndpointHandler
   fun invoke(ctx: Context) {
     ctx.redirect("/login")
   }
@@ -178,10 +179,9 @@ data class ChangePasswordData(
 )
 
 class ChangePassword(val userDao: UserDao): Endpoint {
-  fun invoke(ctx: Context) {
-    val data = ctx.body<ChangePasswordData>()
+  @EndpointHandler
+  fun invoke(ctx: Context, @Body data: ChangePasswordData) {
     val login = ctx.authSession().user?.name ?: throw UnauthorizedResponse()
-    //val userDao = ctx.appAttribute(UserDao::class.java)
     val user = userDao.findName(login) ?: throw UnauthorizedResponse()
     val creds = Creds(user.name, data.oldPass)
     if (!Auth.verify(user, creds)) throw UnauthorizedResponse()
@@ -195,9 +195,9 @@ data class RegisterData(
 )
 
 class Register(val spec: AuthSpec, val userDao: UserDao): Endpoint {
-  fun invoke(ctx: Context): UserInfo {
+  @EndpointHandler
+  fun invoke(@Body data: RegisterData): UserInfo {
     if (!spec.allowRegistration) throw MethodNotAllowedResponse("Registration not allowed", emptyMap())
-    val data = ctx.body<RegisterData>()
     if (data.name.isEmpty()) throw BadRequestResponse("Invalid user name")
     if (data.pass.isEmpty()) throw BadRequestResponse("Invalid password")
     if (userDao.findName(data.name) != null) throw BadRequestResponse("User name exists")
