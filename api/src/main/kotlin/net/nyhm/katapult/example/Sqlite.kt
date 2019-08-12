@@ -1,5 +1,6 @@
 package net.nyhm.katapult.example
 
+import com.google.inject.Inject
 import net.nyhm.katapult.KatapultModule
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -20,7 +21,7 @@ data class SqliteSpec(
  * Exposed uses a single global configuration.
  * Modules that utilize Exposed-based data classes have an invisible dependency on this module.
  */
-class SqliteModule(val spec: SqliteSpec): KatapultModule {
+class SqliteModule @Inject constructor(val spec: SqliteSpec): KatapultModule {
   init {
     val url = "jdbc:sqlite:${spec.dbFile}"
     Database.connect(url, "org.sqlite.JDBC")

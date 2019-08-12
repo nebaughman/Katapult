@@ -1,5 +1,6 @@
 package net.nyhm.katapult.example
 
+import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.BadRequestResponse
@@ -12,9 +13,9 @@ class AdminModule: KatapultModule {
 
     path("/api/admin") {
       get("users") { it.process(GetUsers::class) }
-      post("user") { it.process(NewUser::class) }
+      post("user") { it.process(::newUser) }
       delete("user") { it.process(RemoveUser::class) }
-      post("passwd") { it.process(Passwd::class) }
+      post("passwd") { it.process(::passwd) }
     }
 
     val adminApiFilter = UnauthorizedHandler { !it.authSession().hasRole(UserRole.ADMIN) }
@@ -29,11 +30,23 @@ class AdminModule: KatapultModule {
   override fun config(app: Javalin) {
     app.routes(routes)
   }
+
+  //fun users(userDao: UserDao) = userDao.getUsers()
+
+  fun newUser(@Body data: NewUserData, userDao: UserDao) {
+    userDao.create(UserData(data.name, Auth.hash(data.pass), data.role))
+  }
+
+  fun passwd(@Body data: PasswdData, userDao: UserDao) {
+    transaction {
+      userDao.findName(data.user)?.let { it.pass = Auth.hash(data.pass) } ?: BadRequestResponse()
+    }
+  }
 }
 
-class GetUsers(val userDao: UserDao): Endpoint {
+class GetUsers @Inject constructor(val userDao: UserDao) {
   @EndpointHandler
-  fun invoke() = userDao.getUsers()
+  fun users() = userDao.getUsers()
 }
 
 data class PasswdData(
@@ -41,33 +54,17 @@ data class PasswdData(
     val pass: String
 )
 
-class Passwd(val userDao: UserDao): Endpoint {
-  @EndpointHandler
-  fun invoke(@Body data: PasswdData) {
-    transaction {
-      userDao.findName(data.user)?.let { it.pass = Auth.hash(data.pass) } ?: BadRequestResponse()
-    }
-  }
-}
-
 data class NewUserData(
     val name: String,
     val pass: String,
     val role: UserRole
 )
 
-class NewUser(val userDao: UserDao): Endpoint {
-  @EndpointHandler
-  fun invoke(@Body data: NewUserData) {
-    userDao.create(UserData(data.name, Auth.hash(data.pass), data.role))
-  }
-}
-
 data class RemoveUserData(
     val name: String
 )
 
-class RemoveUser(val userDao: UserDao): Endpoint {
+class RemoveUser @Inject constructor(val userDao: UserDao): Endpoint {
   @EndpointHandler
   fun invoke(@Body data: RemoveUserData) {
     userDao.remove(data.name)

@@ -1,5 +1,6 @@
 package net.nyhm.katapult.example
 
+import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.*
@@ -19,11 +20,12 @@ object AuthModule: KatapultModule {
     before("/*", LoginFilter)
 
     path("/api/auth") {
-        get("login") { it.process(GetLogin::class) }
-        post("login") { it.process(Login::class) }
-        get("logout") { it.process(Logout::class) }
-        post("passwd") { it.process(ChangePassword::class) }
-        post("register") { it.process(Register::class) }
+      get("login") { it.process(GetLogin::class) }
+      //post("login") { it.process(Login::class) }
+      post("login") { it.process(::login) }
+      get("logout") { it.process(Logout::class) }
+      post("passwd") { it.process(ChangePassword::class) }
+      post("register") { it.process(Register::class) }
     }
 
     // logout page request (not api)
@@ -37,6 +39,16 @@ object AuthModule: KatapultModule {
 
   override fun config(app: Javalin) {
     app.routes(routes)
+  }
+
+  fun login(ctx: Context, @Body creds: Creds, userDao: UserDao): LoginResponse {
+    val session = ctx.authSession()
+    session.logout()
+    val user = userDao.findName(creds.user) ?: throw UnauthorizedResponse("No such user")
+    if (!Auth.verify(user, creds)) throw UnauthorizedResponse("Invalid password")
+    session.login(user)
+    info { "Login ${user.name}" }
+    return LoginResponse(true, UserInfo(user))
   }
 }
 
@@ -137,7 +149,7 @@ object Auth {
 /**
  * Get the currently logged-in user info (null if no user logged in)
  */
-class GetLogin(val userDao: UserDao): Endpoint {
+class GetLogin @Inject constructor(val userDao: UserDao): Endpoint {
   @EndpointHandler
   fun invoke(ctx: Context): UserInfo? {
     val login = ctx.authSession().user?.name ?: return null
@@ -145,12 +157,11 @@ class GetLogin(val userDao: UserDao): Endpoint {
   }
 }
 
-class Login(val userDao: UserDao): Endpoint {
+object Login: Endpoint {
   @EndpointHandler
-  fun invoke(ctx: Context, @Body creds: Creds): LoginResponse {
+  fun invoke(ctx: Context, @Body creds: Creds, userDao: UserDao): LoginResponse {
     val session = ctx.authSession()
     session.logout()
-    //val creds = ctx.body<Creds>()
     val user = userDao.findName(creds.user) ?: throw UnauthorizedResponse("No such user")
     if (!Auth.verify(user, creds)) throw UnauthorizedResponse("Invalid password")
     session.login(user)
@@ -178,7 +189,7 @@ data class ChangePasswordData(
     val newPass: String
 )
 
-class ChangePassword(val userDao: UserDao): Endpoint {
+class ChangePassword @Inject constructor(val userDao: UserDao): Endpoint {
   @EndpointHandler
   fun invoke(ctx: Context, @Body data: ChangePasswordData) {
     val login = ctx.authSession().user?.name ?: throw UnauthorizedResponse()

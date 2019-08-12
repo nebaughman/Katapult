@@ -1,10 +1,11 @@
 package net.nyhm.katapult.mod
 
+import com.google.inject.Inject
 import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
 
 data class SpaSpec(
-    val subpages: List<String>
+    val subpages: List<String> = emptyList()
 )
 
 /**
@@ -25,9 +26,7 @@ data class SpaSpec(
  *
  * See the project README for more details (and caveats) of this configuration.
  */
-class SpaModule(
-    val spec: SpaSpec
-): KatapultModule {
+class SpaModule @Inject constructor(val spec: SpaSpec): KatapultModule {
   override fun config(config: JavalinConfig) {
     // eg, config.addSinglePageRoot("/admin", "/app/admin/index.html")
     spec.subpages.forEach {

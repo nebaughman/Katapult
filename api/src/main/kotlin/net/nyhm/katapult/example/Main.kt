@@ -7,6 +7,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
+import com.google.inject.AbstractModule
+import com.google.inject.Guice
 import net.nyhm.katapult.*
 import net.nyhm.katapult.mod.*
 import java.io.File
@@ -70,12 +72,24 @@ class Cli: CliktCommand(
 
     dataDir.mkdir() // TODO: mkdirs()
 
-    val injector = Injector()
-        .inject(SpaSpec(listOf()))
-        .inject(SqliteSpec(File(dataDir, "data.sqlite")))
-        .inject(UsersSpec(Auth::hash))
-        .inject(AuthSpec(true))
-        .inject(UserDao::class, ExposedUserDao)
+    val config = object : AbstractModule() {
+      override fun configure() {
+        bind(SpaSpec::class.java).toInstance(SpaSpec())
+        bind(SqliteSpec::class.java).toInstance(SqliteSpec(File(dataDir, "data.sqlite")))
+        bind(UsersSpec::class.java).toInstance(UsersSpec(Auth::hash))
+        bind(AuthSpec::class.java).toInstance(AuthSpec(true))
+        bind(UserDao::class.java).toInstance(ExposedUserDao)
+
+        bind(SessionSpec::class.java).toInstance(SessionSpec(dataDir))
+        bind(HttpSpec::class.java).toInstance(HttpSpec(httpPort))
+        bind(HttpsSpec::class.java).toInstance(HttpsSpec(dataDir, httpsPort))
+        bind(RedirectSpec::class.java).toInstance(RedirectSpec(
+            { it.scheme() == "http" && it.port() == httpPort },
+            httpsPort,
+            "https"
+        ))
+      }
+    }
 
     val modules = mutableListOf(
         SqliteModule::class,
@@ -89,30 +103,16 @@ class Cli: CliktCommand(
     )
 
     // persist sessions in file store
-    if (sessionFiles) {
-      injector.inject(SessionSpec(dataDir))
-      modules.add(FileSessionHandlerModule::class)
-    }
+    if (sessionFiles) modules.add(FileSessionHandlerModule::class)
 
-    if (http) {
-      injector.inject(HttpSpec(httpPort))
-      modules.add(HttpModule::class)
-    }
+    if (http) modules.add(HttpModule::class)
 
-    if (https) {
-      injector.inject(HttpsSpec(dataDir, httpsPort))
-      modules.add(HttpsModule::class)
-    }
+    if (https) modules.add(HttpsModule::class)
 
     // if both http & https, redirect http to https port
-    if (http && https) {
-      injector.inject(RedirectSpec(
-          { it.scheme() == "http" && it.port() == httpPort },
-          httpsPort,
-          "https"
-      ))
-      modules.add(RedirectModule::class)
-    }
+    if (http && https) modules.add(RedirectModule::class)
+
+    val injector = Guice.createInjector(config)
 
     Katapult(modules, injector).start()
   }

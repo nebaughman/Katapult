@@ -85,7 +85,7 @@ class TestPerformance {
 
     Thread.sleep(2000)
 
-    // warm-up
+    // warm-up (not counted in timing)
     Client("http://localhost:7000/api/$endpoint").use { client ->
       val response = client.send(payload, TestData::class)
       //println(response)

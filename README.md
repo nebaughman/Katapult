@@ -18,6 +18,7 @@ This makes for easy deployment. :bulb: Also consider building `localhost` Web ap
 
 - [Kotlin](https://kotlinlang.org/) (& [Java](https://java.com))
 - [Javalin](https://javalin.io) (& [Jetty](https://www.eclipse.org/jetty/))
+- [Guice](https://github.com/google/guice)
 - [Clikt](https://github.com/ajalt/clikt)
 - [BCrypt](https://github.com/patrickfav/bcrypt)
 - [Exposed](https://github.com/JetBrains/Exposed)
@@ -96,6 +97,22 @@ The `api` project integrates a number of components for building an HTTP(S) API 
 - **Templating:** Javalin supports template engines for server-rendered HTML. An example [Mustache](https://mustache.github.io/) Katapult module is provided.
 
 - **External Data:** The example server stores external data in a data directory. This includes SQLite database, session files, SSL certificate files, etc. Refer to the command-line options for the example server.
+
+#### Now with Guice
+
+> Notice: This is not yet fully stable.
+
+Dependencies are resolved and injected by Google Guice.
+
+Katapult endpoints can be handled in three ways:
+
+- Provide the KClass of a class, which has exactly one function annotated with `@EndpointHandler`. In this case, the class will be resolved by Guice. Be sure to add a Guice `@Inject` annotation to the class's constructor, if needed (refer to Guice instructions). The `@EndpointHandler` function will have its parameters injected by Katapult. The Javalin `Context` can be requested. As a convenience, one parameter may be annotated with `@Body`, which will be extracted from the context body (using `Context.getBodyAsClass(..)`). Other parameters must be able to be resolved by Guice.
+
+- Provide a KClass plus a specific KFunction of that class. Same as above, but the `@EndpointHandler` annotation is not needed; the function will be invoked on the resolved instance.
+
+- Provide a KFunction to a non-instance function. Katapult will invoke the function.
+
+> // TODO: More combinations?
 
 ### Vue App
 

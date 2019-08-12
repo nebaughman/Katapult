@@ -1,7 +1,10 @@
 package net.nyhm.katapult
 
+import com.google.inject.Injector
 import io.javalin.http.Context
+import java.lang.IllegalArgumentException
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.full.*
 
 /**
@@ -37,7 +40,11 @@ interface Endpoint {
   // fun invoke(ctx: Context, body: Any): Any?
 }
 
-fun Context.process(endpoint: KClass<out Endpoint>) {
+fun Context.process(endpoint: KClass<*>) {
+  appAttribute(Processor::class.java).process(this, endpoint)
+}
+
+fun Context.process(endpoint: KFunction<*>) {
   appAttribute(Processor::class.java).process(this, endpoint)
 }
 
@@ -47,12 +54,12 @@ annotation class EndpointHandler // TODO: Better name that doesn't clash with Ja
 @Target(AnnotationTarget.VALUE_PARAMETER)
 annotation class Body
 
-class Processor(val resolver: Resolver) {
+class Processor(val injector: Injector) {
 
   // TODO: Cache resolved Endpoints. Only if @Singleton?
   // TODO: Can Endpoints depend on other Endpoints (or Modules?) A: No
 
-  fun process(ctx: Context, endpoint: KClass<out Endpoint>) {
+  fun process(ctx: Context, endpoint: KClass<*>) {
     try {
       invoke(ctx, endpoint)
     } catch (e: Exception) {
@@ -61,14 +68,33 @@ class Processor(val resolver: Resolver) {
     }
   }
 
-  private fun invoke(ctx: Context, endpoint: KClass<out Endpoint>) {
+  fun process(ctx: Context, endpoint: KFunction<*>) = invoke(ctx, endpoint) // null instance
 
-    val handlerFn = endpoint.functions.find {
+  private fun invoke(ctx: Context, endpoint: KClass<*>) {
+
+    val instance = if (endpoint.objectInstance != null) {
+      endpoint.objectInstance!!
+    } else {
+      injector.getInstance(endpoint.java)
+    }
+
+    invoke(ctx, instance)
+  }
+
+  private fun invoke(ctx: Context, endpoint: Any) {
+
+    // TODO: If endpoint has only one function, assume that one
+    val handlerFn = endpoint::class.functions.find {
       it.findAnnotation<EndpointHandler>() != null
-    } ?: throw KatapultException("Endpoint has no @EndpointHandler $endpoint")
+    } ?: throw KatapultException("Endpoint has no @EndpointHandler ${endpoint::class}")
+
+    invoke(ctx, handlerFn, endpoint)
+  }
+
+  private fun invoke(ctx: Context, endpoint: KFunction<*>, instance: Any? = null) {
 
     val bodyParam =
-      handlerFn.valueParameters.find {
+      endpoint.valueParameters.find {
         it.findAnnotation<Body>() != null
       }?.let {
         ctx.bodyAsClass((it.type.classifier as KClass<*>).java)
@@ -79,14 +105,18 @@ class Processor(val resolver: Resolver) {
       if (bodyParam != null) add(bodyParam)
     }
 
-    val inst = if (endpoint.objectInstance != null) {
-      endpoint.objectInstance!!
-    } else {
-      resolver.resolve(endpoint)
+    val deps = mutableListOf<Any>()
+    if (endpoint.instanceParameter != null && instance == null) {
+      throw IllegalArgumentException("Cannot call instance function without instance")
     }
+    instance?.let { deps.add(instance) }
+    endpoint.valueParameters.forEach {
+      val p = it.type.classifier as KClass<*>
+      inject.find { p.isSubclassOf(it::class) }?.let { deps.add(it) } ?: deps.add(injector.getInstance(p.java))
+    }
+    val result = endpoint.call(*deps.toTypedArray())
 
-    resolver.call(inst, handlerFn, inject)?.let { ctx.json(it) }
-
+    if (result != null) ctx.json(result)
 
     /*
     val fn = inst::class.functions.find { it.name == "invoke" } ?:

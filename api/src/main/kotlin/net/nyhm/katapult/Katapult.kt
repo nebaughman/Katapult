@@ -1,5 +1,7 @@
 package net.nyhm.katapult
 
+import com.google.inject.Guice
+import com.google.inject.Injector
 import io.javalin.Javalin
 import io.javalin.core.JavalinConfig
 import org.eclipse.jetty.server.Server
@@ -42,7 +44,7 @@ typealias Modules = List<KClass<out KatapultModule>>
  * Module dependencies are determined by class type (either other modules
  * or config data). Dependencies must exist and must not be ambiguous.
  */
-class Katapult(val modules: Modules, val injector: Injector = Injector()) {
+class Katapult(val modules: Modules, val injector: Injector = Guice.createInjector()) {
   /**
    * The active Javalin server instance
    */
@@ -53,9 +55,11 @@ class Katapult(val modules: Modules, val injector: Injector = Injector()) {
    */
   fun start() = apply {
     if (app != null) throw IllegalStateException("Already started") // only once
-    val resolver = Resolver(injector)
     // modules may be dependent on one another, resolve as group
-    val mods = resolver.resolveGroup(modules.toSet()).map { it as KatapultModule }
+    val mods = modules.map {
+      if (it.objectInstance != null) it.objectInstance!!
+      else injector.getInstance(it.java)
+    }
     val app = Javalin.create { config ->
       config.showJavalinBanner = false
       val server = Server() // allow modules to manipulate the Jetty server instance
@@ -64,7 +68,7 @@ class Katapult(val modules: Modules, val injector: Injector = Injector()) {
       config.server { server } // set the (potentially customized) Jetty server
     }
     // request context get Processor from app attribute
-    app.attribute(Processor::class.java, Processor(resolver))
+    app.attribute(Processor::class.java, Processor(injector))
     mods.forEach { it.config(app) } // modules can config Javalin app
     app.start() // http(s) connector(s) specif(ies|y) port(s)
     this.app = app // prior exception will not set app
