@@ -12,7 +12,7 @@ import kotlin.reflect.KClass
 class TestModule: KatapultModule {
 
   private val routes = {
-    post("/api/reflect") { it.process(TestEndpoint::class) }
+    post("/api/reflect") { it.process(::handle) }
 
     post("/api/direct") { ctx ->
       val value = ctx.body<TestData>().value
@@ -23,16 +23,13 @@ class TestModule: KatapultModule {
   override fun config(app: Javalin) {
     app.routes(routes)
   }
+
+  fun handle(@Body data: TestData) = TestData(data.value.reversed())
 }
 
 data class TestData(
     val value: String
 )
-
-class TestEndpoint: Endpoint {
-  @EndpointHandler
-  fun handle(@Body data: TestData) = TestData(data.value.reversed())
-}
 
 class Client(val url: String): AutoCloseable {
 

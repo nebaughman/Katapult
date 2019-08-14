@@ -11,9 +11,6 @@ import kotlin.reflect.KClass
  * A module has the opportunity to configure Javalin.
  * Each of the [config] methods is called once per module.
  * Each has a no-op default implementation, if not needed.
- *
- * In addition, Katapult module implementations must have exactly one constructor.
- * The constructor parameters (dependencies) will be injected at startup.
  */
 interface KatapultModule {
   /**
@@ -37,12 +34,10 @@ interface KatapultModule {
 typealias Modules = List<KClass<out KatapultModule>>
 
 /**
- * Construct a Katapult server instance with a set of configuration data
- * and list of modules to start. Modules will have their dependencies
- * (other modules and data) injected upon startup.
- *
- * Module dependencies are determined by class type (either other modules
- * or config data). Dependencies must exist and must not be ambiguous.
+ * Construct a Katapult server instance with a set of modules to start.
+ * The [Injector] should be configured with any external dependencies that
+ * cannot be just-in-time resolved by the injector. (See Guice documentation
+ * to understand what that means.)
  */
 class Katapult(val modules: Modules, val injector: Injector = Guice.createInjector()) {
   /**
@@ -55,7 +50,6 @@ class Katapult(val modules: Modules, val injector: Injector = Guice.createInject
    */
   fun start() = apply {
     if (app != null) throw IllegalStateException("Already started") // only once
-    // modules may be dependent on one another, resolve as group
     val mods = modules.map {
       if (it.objectInstance != null) it.objectInstance!!
       else injector.getInstance(it.java)
@@ -67,15 +61,15 @@ class Katapult(val modules: Modules, val injector: Injector = Guice.createInject
       mods.forEach { it.config(server) } // modules can config server
       config.server { server } // set the (potentially customized) Jetty server
     }
-    // request context get Processor from app attribute
-    app.attribute(Processor::class.java, Processor(injector))
+    // request context Processor stored as attribute
+    app.attribute(Processor::class.java, InjectedProcessor(injector))
     mods.forEach { it.config(app) } // modules can config Javalin app
     app.start() // http(s) connector(s) specif(ies|y) port(s)
     this.app = app // prior exception will not set app
   }
 
   /**
-   * Stop the Javalin app
+   * Stop the Javalin server
    */
   fun stop() {
     app?.stop()

@@ -1,6 +1,7 @@
 package net.nyhm.katapult.mod
 
 import com.github.mustachejava.DefaultMustacheFactory
+import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder
 import io.javalin.plugin.rendering.template.JavalinMustache
@@ -24,7 +25,7 @@ data class MustacheSpec(
  * Notice: This is very particular and not well tested. Like everything,
  * it's for demonstration and experimentation... but even more so in this case.
  */
-class MustacheModule(val spec: MustacheSpec): KatapultModule {
+class MustacheModule @Inject constructor(val spec: MustacheSpec): KatapultModule {
   override fun config(app: Javalin) {
     JavalinMustache.configure(DefaultMustacheFactory())
     spec.routePaths.forEach {

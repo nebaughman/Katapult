@@ -1,6 +1,5 @@
 package net.nyhm.katapult.example
 
-import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.BadRequestResponse
@@ -12,9 +11,9 @@ class AdminModule: KatapultModule {
   private val routes = {
 
     path("/api/admin") {
-      get("users") { it.process(GetUsers::class) }
+      get("users") { it.process(::users) }
       post("user") { it.process(::newUser) }
-      delete("user") { it.process(RemoveUser::class) }
+      delete("user") { it.process(::removeUser) }
       post("passwd") { it.process(::passwd) }
     }
 
@@ -31,7 +30,7 @@ class AdminModule: KatapultModule {
     app.routes(routes)
   }
 
-  //fun users(userDao: UserDao) = userDao.getUsers()
+  fun users(userDao: UserDao) = userDao.getUsers()
 
   fun newUser(@Body data: NewUserData, userDao: UserDao) {
     userDao.create(UserData(data.name, Auth.hash(data.pass), data.role))
@@ -42,11 +41,10 @@ class AdminModule: KatapultModule {
       userDao.findName(data.user)?.let { it.pass = Auth.hash(data.pass) } ?: BadRequestResponse()
     }
   }
-}
 
-class GetUsers @Inject constructor(val userDao: UserDao) {
-  @EndpointHandler
-  fun users() = userDao.getUsers()
+  fun removeUser(@Body data: RemoveUserData, userDao: UserDao) {
+    userDao.remove(data.name)
+  }
 }
 
 data class PasswdData(
@@ -63,10 +61,3 @@ data class NewUserData(
 data class RemoveUserData(
     val name: String
 )
-
-class RemoveUser @Inject constructor(val userDao: UserDao): Endpoint {
-  @EndpointHandler
-  fun invoke(@Body data: RemoveUserData) {
-    userDao.remove(data.name)
-  }
-}

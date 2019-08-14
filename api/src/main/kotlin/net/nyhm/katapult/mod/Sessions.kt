@@ -1,5 +1,6 @@
 package net.nyhm.katapult.mod
 
+import com.google.inject.Inject
 import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
 import org.eclipse.jetty.server.session.DefaultSessionCache
@@ -15,7 +16,7 @@ data class SessionSpec(
  * Persists http sessions in files in dataDir/sessions/
  * Sessions and data must be [Serializable]
  */
-class FileSessionHandlerModule(val spec: SessionSpec): KatapultModule {
+class FileSessionHandlerModule @Inject constructor(val spec: SessionSpec): KatapultModule {
   override fun config(config: JavalinConfig) {
     config.sessionHandler { fileSessionHandler(spec.dataDir) }
   }

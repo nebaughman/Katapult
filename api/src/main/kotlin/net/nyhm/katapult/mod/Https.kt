@@ -1,5 +1,6 @@
 package net.nyhm.katapult.mod
 
+import com.google.inject.Inject
 import net.nyhm.katapult.KatapultModule
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
@@ -22,7 +23,7 @@ data class HttpsSpec(
     val httpsPort: Int = 443
 )
 
-class HttpsModule(val spec: HttpsSpec): KatapultModule {
+class HttpsModule @Inject constructor(val spec: HttpsSpec): KatapultModule {
 
   override fun config(server: Server) {
     server.apply {

@@ -1,7 +1,5 @@
 package net.nyhm.katapult.mod
 
-import io.javalin.core.JavalinConfig
-
 /**
  * Serves an embedded app (Vue-Cli) from resources/app.
  * Also see [Spa] for single-page and multi-page app support.

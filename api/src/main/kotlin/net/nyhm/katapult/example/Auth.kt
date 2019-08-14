@@ -13,19 +13,18 @@ data class AuthSpec(
     val allowRegistration: Boolean = true
 )
 
-object AuthModule: KatapultModule {
+class AuthModule @Inject constructor(private val spec: AuthSpec): KatapultModule {
 
   private val routes = {
 
     before("/*", LoginFilter)
 
     path("/api/auth") {
-      get("login") { it.process(GetLogin::class) }
-      //post("login") { it.process(Login::class) }
+      get("login") { it.process(::getLogin) }
       post("login") { it.process(::login) }
-      get("logout") { it.process(Logout::class) }
-      post("passwd") { it.process(ChangePassword::class) }
-      post("register") { it.process(Register::class) }
+      get("logout") { it.authSession().logout() }
+      post("passwd") { it.process(::changePassword) }
+      if (spec.allowRegistration) post("register") { it.process(::register) }
     }
 
     // logout page request (not api)
@@ -50,7 +49,41 @@ object AuthModule: KatapultModule {
     info { "Login ${user.name}" }
     return LoginResponse(true, UserInfo(user))
   }
+
+  /**
+   * Get the currently logged-in user info (null if no user logged in)
+   */
+  fun getLogin(ctx: Context, userDao: UserDao): UserInfo? {
+    val login = ctx.authSession().user?.name ?: return null // TODO: allow AuthSession to be injected
+    return userDao.findName(login)?.let { UserInfo(it) }
+  }
+
+  fun changePassword(ctx: Context, @Body data: ChangePasswordData, userDao: UserDao) {
+    val login = ctx.authSession().user?.name ?: throw UnauthorizedResponse()
+    val user = userDao.findName(login) ?: throw UnauthorizedResponse()
+    val creds = Creds(user.name, data.oldPass)
+    if (!Auth.verify(user, creds)) throw UnauthorizedResponse()
+    transaction { user.pass = Auth.hash(data.newPass) }
+  }
+
+  fun register(@Body data: RegisterData, userDao: UserDao): UserInfo {
+    if (!spec.allowRegistration) throw MethodNotAllowedResponse("Registration not allowed", emptyMap())
+    if (data.name.isEmpty()) throw BadRequestResponse("Invalid user name")
+    if (data.pass.isEmpty()) throw BadRequestResponse("Invalid password")
+    if (userDao.findName(data.name) != null) throw BadRequestResponse("User name exists")
+    val user = userDao.create(UserData(data.name, Auth.hash(data.pass), UserRole.USER))
+    return UserInfo(user)
+  }
 }
+
+data class ChangePasswordData(
+    val oldPass: String,
+    val newPass: String
+)
+data class RegisterData(
+    val name: String,
+    val pass: String
+)
 
 /**
  * This filter guards that a user is logged in.
@@ -144,75 +177,4 @@ object Auth {
    * Utility method to perform password hashing.
    */
   fun hash(pass: String): String = BCrypt.hashpw(pass, BCrypt.gensalt())
-}
-
-/**
- * Get the currently logged-in user info (null if no user logged in)
- */
-class GetLogin @Inject constructor(val userDao: UserDao): Endpoint {
-  @EndpointHandler
-  fun invoke(ctx: Context): UserInfo? {
-    val login = ctx.authSession().user?.name ?: return null
-    return userDao.findName(login)?.let { UserInfo(it) }
-  }
-}
-
-object Login: Endpoint {
-  @EndpointHandler
-  fun invoke(ctx: Context, @Body creds: Creds, userDao: UserDao): LoginResponse {
-    val session = ctx.authSession()
-    session.logout()
-    val user = userDao.findName(creds.user) ?: throw UnauthorizedResponse("No such user")
-    if (!Auth.verify(user, creds)) throw UnauthorizedResponse("Invalid password")
-    session.login(user)
-    Log.info(this) { "Login ${user.name}" }
-    return LoginResponse(true, UserInfo(user))
-  }
-}
-
-object Logout: Endpoint {
-  @EndpointHandler
-  fun invoke(ctx: Context) {
-    ctx.authSession().logout()
-  }
-}
-
-object LoginRedirect: Endpoint {
-  @EndpointHandler
-  fun invoke(ctx: Context) {
-    ctx.redirect("/login")
-  }
-}
-
-data class ChangePasswordData(
-    val oldPass: String,
-    val newPass: String
-)
-
-class ChangePassword @Inject constructor(val userDao: UserDao): Endpoint {
-  @EndpointHandler
-  fun invoke(ctx: Context, @Body data: ChangePasswordData) {
-    val login = ctx.authSession().user?.name ?: throw UnauthorizedResponse()
-    val user = userDao.findName(login) ?: throw UnauthorizedResponse()
-    val creds = Creds(user.name, data.oldPass)
-    if (!Auth.verify(user, creds)) throw UnauthorizedResponse()
-    transaction { user.pass = Auth.hash(data.newPass) }
-  }
-}
-
-data class RegisterData(
-    val name: String,
-    val pass: String
-)
-
-class Register(val spec: AuthSpec, val userDao: UserDao): Endpoint {
-  @EndpointHandler
-  fun invoke(@Body data: RegisterData): UserInfo {
-    if (!spec.allowRegistration) throw MethodNotAllowedResponse("Registration not allowed", emptyMap())
-    if (data.name.isEmpty()) throw BadRequestResponse("Invalid user name")
-    if (data.pass.isEmpty()) throw BadRequestResponse("Invalid password")
-    if (userDao.findName(data.name) != null) throw BadRequestResponse("User name exists")
-    val user = userDao.create(UserData(data.name, Auth.hash(data.pass), UserRole.USER))
-    return UserInfo(user)
-  }
 }

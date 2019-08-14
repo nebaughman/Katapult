@@ -88,6 +88,7 @@ class Cli: CliktCommand(
             httpsPort,
             "https"
         ))
+        bind(Processor::class.java).to(InjectedProcessor::class.java)
       }
     }
 
