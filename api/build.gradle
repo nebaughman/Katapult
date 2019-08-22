@@ -26,8 +26,10 @@ dependencies {
     implementation 'com.github.spullara.mustache.java:compiler:0.9.6'
     implementation 'org.mindrot:jbcrypt:0.4'
     implementation 'org.jetbrains.exposed:exposed:0.14.4'
-    implementation 'org.xerial:sqlite-jdbc:3.27.2.1'
     implementation 'com.google.inject:guice:4.2.2'
+
+    implementation 'org.xerial:sqlite-jdbc:3.27.2.1'
+    implementation 'org.postgresql:postgresql:42.2.6'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'

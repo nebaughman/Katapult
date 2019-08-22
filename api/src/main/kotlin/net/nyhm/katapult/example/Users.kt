@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
 import com.google.inject.Inject
 import io.javalin.core.security.Role
+import net.nyhm.katapult.Db
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.Log
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -26,13 +26,10 @@ data class UsersSpec(
  * Sample Users module, which initializes users table.
  * Requires a DB module to have been initialized first.
  */
-class UsersModule @Inject constructor(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
+class UsersModule @Inject constructor(db: Db, val spec: UsersSpec, val userDao: UserDao): KatapultModule {
 
   init {
-    // create the users table
-    transaction {
-      SchemaUtils.create(Users)
-    }
+    db.init(Users) // create the users table
 
     // create admin user with initial default password
     transaction {

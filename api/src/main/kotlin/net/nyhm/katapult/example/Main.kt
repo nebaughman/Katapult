@@ -75,10 +75,16 @@ class Cli: CliktCommand(
     val config = object : AbstractModule() {
       override fun configure() {
         bind(SpaSpec::class.java).toInstance(SpaSpec())
-        bind(SqliteSpec::class.java).toInstance(SqliteSpec(File(dataDir, "data.sqlite")))
         bind(UsersSpec::class.java).toInstance(UsersSpec(Auth::hash))
         bind(AuthSpec::class.java).toInstance(AuthSpec(true))
         bind(UserDao::class.java).toInstance(ExposedUserDao)
+
+        bind(DbDriver::class.java).to(SqliteDriver::class.java)
+        bind(SqliteSpec::class.java).toInstance(SqliteSpec(File(dataDir, "data.sqlite")))
+
+        //bind(DbDriver::class.java).to(PostgresDriver::class.java)
+        //bind(PostgresSpec::class.java).toInstance(PostgresSpec("localhost", "katapult", "postgres", "postgres"))
+        // TODO: db settings from command-line (or env)
 
         bind(SessionSpec::class.java).toInstance(SessionSpec(dataDir))
         bind(HttpSpec::class.java).toInstance(HttpSpec(httpPort))
@@ -93,7 +99,6 @@ class Cli: CliktCommand(
     }
 
     val modules = mutableListOf(
-        SqliteModule::class,
         AuthModule::class,
         AppModule::class,
         SpaModule::class,
