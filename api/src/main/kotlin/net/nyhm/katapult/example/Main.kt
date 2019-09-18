@@ -77,7 +77,8 @@ class Cli: CliktCommand(
         bind(SpaSpec::class.java).toInstance(SpaSpec())
         bind(UsersSpec::class.java).toInstance(UsersSpec(Auth::hash))
         bind(AuthSpec::class.java).toInstance(AuthSpec(true))
-        bind(UserDao::class.java).toInstance(ExposedUserDao)
+
+        bind(UserDao::class.java).to(ExposedUserDao::class.java)
 
         bind(DbDriver::class.java).to(SqliteDriver::class.java)
         bind(SqliteSpec::class.java).toInstance(SqliteSpec(File(dataDir, "data.sqlite")))

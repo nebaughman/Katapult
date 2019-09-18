@@ -9,36 +9,41 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.sql.Connection
 
-interface DbDriver {
-  fun init()
-}
-
 /**
- * Database-based modules should depend on [Db] to ensure database has been initialized.
+ * Exposed database dao classes should depend on [ExposedDb] to ensure database has been initialized.
  */
-class Db @Inject constructor(driver: DbDriver) {
+class ExposedDb @Inject constructor(driver: DbDriver) {
 
   init {
     driver.init()
   }
 
-  fun init(table: Table) = transaction { SchemaUtils.create(table) }
+  /**
+   * Exposed database dao classes should call this method to initialize tables.
+   */
+  fun init(table: Table) = transaction {
+    SchemaUtils.create(table)
+    //SchemaUtils.createMissingTablesAndColumns(table)
+    // TODO: Cli flag whether to do this or not, as well as
+    //  separate cli command that just initializes tables and exits
+  }
+}
+
+/**
+ * Bind a concrete [DbDriver] class to the injection framework for [ExposedDb] to initialize.
+ */
+interface DbDriver {
+  fun init()
 }
 
 data class SqliteSpec(
-    val dbFile: File
+  val dbFile: File
 )
 
 /**
  * Initializes a SQLite db for Exposed ORM/DAO.
  * Exposed uses a single global configuration.
- * Modules that utilize Exposed-based data classes have an invisible dependency on this driver.
- * That is, it must be initialized prior to use.
- * To ensure the driver is initialized, add a dependency to the Guice injection system like:
- *
- *   bind(DbDriver::class.java).to(SqliteDriver::class.java)
- *
- * Also have any module that creates Exposed dao/orm bindings depend on Db.
+ * Modules that utilize Exposed-based data classes have an invisible dependency on this module.
  */
 class SqliteDriver @Inject constructor(private val spec: SqliteSpec): DbDriver {
   override fun init() {
@@ -51,10 +56,10 @@ class SqliteDriver @Inject constructor(private val spec: SqliteSpec): DbDriver {
 }
 
 data class PostgresSpec(
-    val host: String,
-    val db: String,
-    val user: String = "",
-    val pass: String = ""
+  val host: String,
+  val db: String,
+  val user: String = "postgres",
+  val pass: String = ""
 )
 
 class PostgresDriver @Inject constructor(private val spec: PostgresSpec): DbDriver {

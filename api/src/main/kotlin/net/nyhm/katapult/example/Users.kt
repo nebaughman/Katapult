@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
 import com.google.inject.Inject
 import io.javalin.core.security.Role
-import net.nyhm.katapult.Db
+import net.nyhm.katapult.ExposedDb
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.Log
 import org.jetbrains.exposed.dao.EntityID
@@ -26,10 +26,9 @@ data class UsersSpec(
  * Sample Users module, which initializes users table.
  * Requires a DB module to have been initialized first.
  */
-class UsersModule @Inject constructor(db: Db, val spec: UsersSpec, val userDao: UserDao): KatapultModule {
+class UsersModule @Inject constructor(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
 
   init {
-    db.init(Users) // create the users table
 
     // create admin user with initial default password
     transaction {
@@ -126,7 +125,11 @@ object Users: IntIdTable("users") {
  * Note that data objects may be fetched without a transaction, then later wrapped in a transaction
  * for mutation; or the entire operation may be wrapped in a transaction.
  */
-object ExposedUserDao: UserDao {
+class ExposedUserDao @Inject constructor(db: ExposedDb): UserDao {
+
+  init {
+    db.init(Users)
+  }
 
   override fun create(user: User): User = transaction {
     UserEntity.new {
