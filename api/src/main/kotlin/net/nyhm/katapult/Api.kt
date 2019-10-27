@@ -3,10 +3,13 @@ package net.nyhm.katapult
 import com.google.inject.Inject
 import com.google.inject.Injector
 import io.javalin.http.Context
+import io.javalin.http.HttpResponseException
+import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
-import kotlin.reflect.full.*
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.valueParameters
 
 /**
  * Report whether this context indicates it is an AJAX request.
@@ -52,9 +55,14 @@ class InjectedProcessor @Inject constructor(@Inject val injector: Injector): Pro
       else if (isBodyParam(it)) deps.add(ctx.bodyAsClass(paramClass.java))
       else deps.add(injector.getInstance(paramClass.java))
     }
-    val result = endpoint.call(*deps.toTypedArray())
 
-    if (result != null) ctx.json(result)
+    try {
+      val result = endpoint.call(*deps.toTypedArray())
+      if (result != null) ctx.json(result)
+    } catch (e:InvocationTargetException) {
+      if (e.cause is HttpResponseException) throw e.cause as HttpResponseException
+      else throw e
+    }
   }
 
   private fun isBodyParam(param: KParameter) = param.findAnnotation<Body>() != null
