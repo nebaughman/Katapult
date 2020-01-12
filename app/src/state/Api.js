@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from "axios"
 
 // TODO: TypeScript with proper classes (Api interface, AxiosApi impl, MockApi impl)
 
@@ -37,6 +37,10 @@ export const Api = Object.freeze({
 
   async passwd(user, pass) {
     return await this.call("/api/admin/passwd", { user, pass })
+  },
+
+  async stats() {
+    return await this.call("/api/admin/stats")
   },
 
 })

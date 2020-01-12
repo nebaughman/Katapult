@@ -129,6 +129,9 @@ class Cli: CliktCommand(
             "https"
         ))
         bind(Processor::class.java).to(InjectedProcessor::class.java)
+
+        // Guice doesn't understand Kotlin object singletons, so have to give it an instance
+        bind(RequestLog::class.java).toInstance(RequestLog)
       }
     }
 
@@ -140,7 +143,8 @@ class Cli: CliktCommand(
         UsersModule::class,
         AdminModule::class,
         ErrorModule::class,
-        RequestLog::class
+        RequestLog::class,
+        ApiStats::class
     )
 
     if (http) modules.add(HttpModule::class)
@@ -151,6 +155,10 @@ class Cli: CliktCommand(
     if (http && https) modules.add(RedirectModule::class)
 
     val injector = Guice.createInjector(config)
+
+    // if there is a RequestLog module, add AccessLogger
+    injector.getInstance(RequestLog::class.java)?.add(AccessLogger)
+    // TODO: instead, this could/should be done via a module
 
     Katapult(modules, injector).start()
   }
