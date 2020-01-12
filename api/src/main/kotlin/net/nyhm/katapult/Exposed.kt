@@ -25,7 +25,7 @@ class ExposedDb @Inject constructor(driver: DbDriver) {
     SchemaUtils.create(table)
     //SchemaUtils.createMissingTablesAndColumns(table)
     // TODO: Cli flag whether to do this or not, as well as
-    //  separate cli command that just initializes tables and exits
+    //  separate cli command to initialize tables and exit
   }
 }
 
@@ -36,18 +36,23 @@ interface DbDriver {
   fun init()
 }
 
-data class SqliteSpec(
+/**
+ * Marker interface for db config
+ */
+interface DbConfig
+
+data class SqliteConfig(
   val dbFile: File
-)
+): DbConfig
 
 /**
  * Initializes a SQLite db for Exposed ORM/DAO.
  * Exposed uses a single global configuration.
  * Modules that utilize Exposed-based data classes have an invisible dependency on this module.
  */
-class SqliteDriver @Inject constructor(private val spec: SqliteSpec): DbDriver {
+class SqliteDriver @Inject constructor(private val config: SqliteConfig): DbDriver {
   override fun init() {
-    val url = "jdbc:sqlite:${spec.dbFile}"
+    val url = "jdbc:sqlite:${config.dbFile}"
     Database.connect(url, "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
     // sqlite requires serializable isolation level
@@ -55,16 +60,16 @@ class SqliteDriver @Inject constructor(private val spec: SqliteSpec): DbDriver {
   }
 }
 
-data class PostgresSpec(
+data class PostgresConfig(
   val host: String,
   val db: String,
   val user: String = "postgres",
   val pass: String = ""
-)
+): DbConfig
 
-class PostgresDriver @Inject constructor(private val spec: PostgresSpec): DbDriver {
+class PostgresDriver @Inject constructor(private val config: PostgresConfig): DbDriver {
   override fun init() {
-    val url = "jdbc:postgresql://${spec.host}/${spec.db}"
-    Database.connect(url, "org.postgresql.Driver", spec.user, spec.pass)
+    val url = "jdbc:postgresql://${config.host}/${config.db}"
+    Database.connect(url, "org.postgresql.Driver", config.user, config.pass)
   }
 }

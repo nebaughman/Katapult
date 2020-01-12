@@ -1,10 +1,10 @@
 package net.nyhm.katapult.example
 
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.flag
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.versionOption
+import com.github.ajalt.clikt.parameters.groups.OptionGroup
+import com.github.ajalt.clikt.parameters.groups.groupChoice
+import com.github.ajalt.clikt.parameters.groups.required
+import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
 import com.google.inject.AbstractModule
@@ -21,6 +21,18 @@ fun main(args: Array<String>) = Cli()
         message = { BuildProperties.fullTitle }
     )
     .main(args)
+
+class SqliteOptions: OptionGroup(name = "--db=sqlite options") {
+  val file by option("--db-file", envvar = "SQLITE_FILE").file().required()
+}
+
+// TODO: Make these match https://www.postgresql.org/docs/current/libpq-envars.html
+class PostgresOptions: OptionGroup(name = "--db=postgres options") {
+  val host by option("--db-host", envvar = "PG_HOST").required()
+  val name by option("--db-name", envvar = "PG_NAME").required()
+  val user by option("--db-user", envvar = "PG_USER").required()
+  val pass by option("--db-pass", envvar = "PG_PASS").required()
+}
 
 /**
  * Command line interpreter
@@ -66,11 +78,16 @@ class Cli: CliktCommand(
   val http: Boolean get() { return httpPort > 0 }
   val https: Boolean get() { return httpsPort > 0 }
 
+  val db by option("--db", envvar = "DB_TYPE").groupChoice(
+    "sqlite" to SqliteOptions(),
+    "postgres" to PostgresOptions()
+  ).required()
+
   override fun run() {
 
     Log.info(this) { "Starting ${BuildProperties.fullTitle}" }
 
-    dataDir.mkdir() // TODO: mkdirs()
+    dataDir.mkdirs()
 
     val config = object : AbstractModule() {
       override fun configure() {
@@ -80,12 +97,19 @@ class Cli: CliktCommand(
 
         bind(UserDao::class.java).to(ExposedUserDao::class.java)
 
-        bind(DbDriver::class.java).to(SqliteDriver::class.java)
-        bind(SqliteSpec::class.java).toInstance(SqliteSpec(File(dataDir, "data.sqlite")))
-
-        //bind(DbDriver::class.java).to(PostgresDriver::class.java)
-        //bind(PostgresSpec::class.java).toInstance(PostgresSpec("localhost", "katapult", "postgres", "postgres"))
-        // TODO: db settings from command-line (or env)
+        when (val it = db) {
+          is SqliteOptions -> {
+            bind(DbDriver::class.java).to(SqliteDriver::class.java)
+            val file = if (it.file.isAbsolute) it.file else dataDir.resolve(it.file) // TODO: test relative path
+            bind(SqliteConfig::class.java).toInstance(SqliteConfig(file))
+          }
+          is PostgresOptions -> {
+            bind(DbDriver::class.java).to(PostgresDriver::class.java)
+            bind(PostgresConfig::class.java).toInstance(PostgresConfig(
+              it.host, it.name, it.user, it.pass
+            ))
+          }
+        }
 
         bind(SessionSpec::class.java).toInstance(SessionSpec(dataDir))
         bind(HttpSpec::class.java).toInstance(HttpSpec(httpPort))
