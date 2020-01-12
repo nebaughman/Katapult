@@ -38,7 +38,7 @@ Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let'
 - [Vue-FontAwesome](https://github.com/FortAwesome/vue-fontawesome): FontAwesome fonts in Vue!
 - [Bootstrap](https://getbootstrap.com): UI framework
 - [Axios](https://github.com/axios/axios): AJAX calls
-- [Yarn](https://yarnpkg.com): Build system
+- [Yarn](https://yarnpkg.com): Dependency & Build system
 
 > I'd like to add TypeScript to the ecosystem (for TS classes, as well as TS-based Vue components), but I don't have the configuration quite right yet.
 

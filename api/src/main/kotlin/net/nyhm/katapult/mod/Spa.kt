@@ -9,7 +9,7 @@ data class SpaSpec(
 )
 
 /**
- * Also see [App] for serving a bundled Vue app.
+ * Also see [AppModule] for serving a bundled Vue app.
  *
  * SpaModule makes some assumptions about the Vue app's layout
  * (in SPA and/or multi-page mode).

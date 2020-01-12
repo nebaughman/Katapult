@@ -71,11 +71,7 @@
     methods: {
       changePassword() {
         this.busy = true
-        const data = {
-          user: this.user,
-          pass: this.pass,
-        }
-        Api.passwd(this.user, this.pass).then(response => {
+        Api.passwd(this.user, this.pass).then(() => {
           this.pass = ''
           this.conf = ''
           this.busy = false

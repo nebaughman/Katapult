@@ -2,7 +2,7 @@ package net.nyhm.katapult.mod
 
 /**
  * Serves an embedded app (Vue-Cli) from resources/app.
- * Also see [Spa] for single-page and multi-page app support.
+ * Also see [SpaModule] for single-page and multi-page app support.
  */
 object AppModule: StaticFilesModule(StaticFilesSpec(listOf("/app")))
 //

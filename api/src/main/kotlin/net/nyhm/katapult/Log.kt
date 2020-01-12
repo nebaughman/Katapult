@@ -3,7 +3,10 @@ package net.nyhm.katapult
 import org.slf4j.LoggerFactory
 
 /**
- * Logging service (wrapper)
+ * Logging service wrapper.
+ *
+ * - Use it like this: `Log.info(this) { "Log message..." }`
+ * - Or use the extension functions: `info { "Log message..." }`
  */
 object Log {
   private fun logger(source: Any) = LoggerFactory.getLogger(source.javaClass)
