@@ -2,6 +2,7 @@ package net.nyhm.katapult.mod
 
 import com.google.inject.Inject
 import net.nyhm.katapult.KatapultModule
+import net.nyhm.katapult.info
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.util.ssl.SslContextFactory
@@ -27,6 +28,7 @@ class HttpsModule @Inject constructor(val spec: HttpsSpec): KatapultModule {
 
   override fun config(server: Server) {
     server.apply {
+      info { "HTTPS port ${spec.httpsPort}" }
       addConnector(
           ServerConnector(this, sslContextFactory()).also {
             it.port = spec.httpsPort

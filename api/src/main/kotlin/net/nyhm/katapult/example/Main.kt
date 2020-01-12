@@ -47,9 +47,17 @@ class Cli: CliktCommand(
    * (Otherwise, experienced session issues serving both HTTP and HTTPS.)
    */
   val httpPort by option(
-      "--httpPort",
+      "--http-port",
       help = "HTTP listen port (0 to disable)"
-  ).int().default(0) // TODO: production 80, dev 7080
+  ).int().default(80)
+
+  val httpsPort by option(
+      "--https-port",
+      help = "HTTPS listen port (0 to disable)"
+  ).int().default(443)
+
+  val http: Boolean get() { return httpPort > 0 }
+  val https: Boolean get() { return httpsPort > 0 }
 
   /*
   val httpRedirect by option(
@@ -57,11 +65,6 @@ class Cli: CliktCommand(
       help = "Redirect HTTP to HTTPS port"
   ).flag("--no-http-redirect")
   */
-
-  val httpsPort by option(
-      "--httpsPort",
-      help = "HTTPS listen port (0 to disable)"
-  ).int().default(0) // TODO: production 443, dev 7443
 
   val dataDir by option(
       "--data-dir",
@@ -74,9 +77,6 @@ class Cli: CliktCommand(
       "--session-files",
       help = "Store sessions in files"
   ).flag("--no-session-files")
-
-  val http: Boolean get() { return httpPort > 0 }
-  val https: Boolean get() { return httpsPort > 0 }
 
   val db by option("--db", envvar = "DB_TYPE").groupChoice(
     "sqlite" to SqliteOptions(),

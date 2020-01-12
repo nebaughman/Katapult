@@ -5,6 +5,7 @@ import io.javalin.Javalin
 import io.javalin.http.Context
 import io.javalin.apibuilder.ApiBuilder
 import net.nyhm.katapult.KatapultModule
+import net.nyhm.katapult.info
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import java.net.URI
@@ -18,6 +19,7 @@ data class HttpSpec(
  */
 class HttpModule @Inject constructor(val spec: HttpSpec): KatapultModule {
   override fun config(server: Server) {
+    info { "HTTP port ${spec.port}" }
     server.addConnector(
         ServerConnector(server).also { it.port = spec.port }
     )
