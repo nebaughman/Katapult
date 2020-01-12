@@ -105,7 +105,7 @@ class Cli: CliktCommand(
         SpaModule::class,
         UsersModule::class,
         AdminModule::class,
-        SampleErrorModule::class,
+        ErrorModule::class,
         RequestLog::class
     )
 

@@ -1,4 +1,4 @@
-package net.nyhm.katapult.mod
+package net.nyhm.katapult.example
 
 import io.javalin.Javalin
 import net.nyhm.katapult.KatapultModule
@@ -7,8 +7,9 @@ import net.nyhm.katapult.Log
 /**
  * Sample error handling module. This is rather experimental, and likely not suitable for production.
  */
-object SampleErrorModule: KatapultModule {
+object ErrorModule: KatapultModule {
   override fun config(app: Javalin) {
+
     app.exception(Exception::class.java) { e,ctx ->
       Log.fail(this, e)
       ctx.status(500)
@@ -24,8 +25,9 @@ object SampleErrorModule: KatapultModule {
     }
 
     app.error(500) { ctx ->
-      Log.info(this) { "Internal server error [${ctx.path()}]" }
+      Log.warn(this) { "Internal server error [${ctx.path()}]" }
       ctx.result("Internal server error")
+      //
       // TODO: Which is best practice:
       // - Set a custom response (or page content), or
       // - Send 500 with no content (browser shows its own 500 page)
@@ -35,8 +37,8 @@ object SampleErrorModule: KatapultModule {
       Log.warn(this) { "Unauthorized [${ctx.path()}]" }
     }
 
-    //app.error(404) { ctx ->
-    //  Log.info(this) { "Not found [${ctx.path()}]" }
-    //}
+    app.error(404) { ctx ->
+      Log.info(this) { "Not found [${ctx.path()}]" }
+    }
   }
 }
