@@ -78,6 +78,11 @@ class Cli: CliktCommand(
       help = "Store sessions in files"
   ).flag("--no-session-files")
 
+  val sessionTimeout by option(
+    "--session-timeout",
+    help = "Session timeout (in seconds)"
+  ).int()
+
   val db by option("--db", envvar = "DB_TYPE").groupChoice(
     "sqlite" to SqliteOptions(),
     "postgres" to PostgresOptions()
@@ -111,7 +116,11 @@ class Cli: CliktCommand(
           }
         }
 
-        bind(SessionSpec::class.java).toInstance(SessionSpec(dataDir))
+        bind(SessionSpec::class.java).toInstance(SessionSpec(
+          dataDir = if (sessionFiles) dataDir else null,
+          timeoutSeconds = sessionTimeout // may be null
+        ))
+
         bind(HttpSpec::class.java).toInstance(HttpSpec(httpPort))
         bind(HttpsSpec::class.java).toInstance(HttpsSpec(dataDir, httpsPort))
         bind(RedirectSpec::class.java).toInstance(RedirectSpec(
@@ -124,6 +133,7 @@ class Cli: CliktCommand(
     }
 
     val modules = mutableListOf(
+        SessionModule::class,
         AuthModule::class,
         AppModule::class,
         SpaModule::class,
@@ -132,9 +142,6 @@ class Cli: CliktCommand(
         ErrorModule::class,
         RequestLog::class
     )
-
-    // persist sessions in file store
-    if (sessionFiles) modules.add(FileSessionHandlerModule::class)
 
     if (http) modules.add(HttpModule::class)
 
