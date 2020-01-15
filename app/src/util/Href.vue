@@ -10,6 +10,9 @@
     name: "Href",
 
     props: {
+      /**
+       * String name can be provided here (or use the <slot> to insert content)
+       */
       name: {
         type: String,
         required: false,
