@@ -1,12 +1,20 @@
 package net.nyhm.katapult.example
 
+import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.BadRequestResponse
 import net.nyhm.katapult.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
-class AdminModule: KatapultModule {
+data class AdminConfig(
+  /**
+   * See [AuthConfig.guardPathAccess] (same thing)
+   */
+  val guardPathAccess: Boolean = true
+)
+
+class AdminModule @Inject constructor(private val config: AdminConfig): KatapultModule {
 
   private val routes = {
 
@@ -20,10 +28,12 @@ class AdminModule: KatapultModule {
     val adminApiFilter = UnauthorizedHandler { !it.authSession().hasRole(UserRole.ADMIN) }
     before("/api/admin/*", adminApiFilter)
 
-    // reject by redirect for admin links (rather than api)
-    val adminFilter = RedirectHandler("/login") { !it.authSession().hasRole(UserRole.ADMIN) }
-    before("/admin", adminFilter)
-    before("/admin/*", adminFilter)
+    if (config.guardPathAccess) {
+      // reject by redirect for admin links (rather than api)
+      val adminFilter = RedirectHandler("/login") { !it.authSession().hasRole(UserRole.ADMIN) }
+      before("/admin", adminFilter)
+      before("/admin/*", adminFilter)
+    }
   }
 
   override fun config(app: Javalin) {

@@ -23,6 +23,10 @@ export const Api = Object.freeze({
     return await this.call("/api/auth/login", { user, pass })
   },
 
+  async logout() {
+    return await this.call("/api/auth/logout")
+  },
+
   async getUsers() {
     return await this.call("/api/admin/users")
   },

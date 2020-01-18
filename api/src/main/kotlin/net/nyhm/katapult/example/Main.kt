@@ -98,7 +98,8 @@ class Cli: CliktCommand(
       override fun configure() {
         bind(SpaSpec::class.java).toInstance(SpaSpec())
         bind(UsersSpec::class.java).toInstance(UsersSpec(Auth::hash))
-        bind(AuthSpec::class.java).toInstance(AuthSpec(true))
+        bind(AuthConfig::class.java).toInstance(AuthConfig(true, false))
+        bind(AdminConfig::class.java).toInstance(AdminConfig(false))
 
         bind(UserDao::class.java).to(ExposedUserDao::class.java)
 

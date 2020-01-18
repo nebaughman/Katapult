@@ -43,3 +43,13 @@ if (process.env.NODE_ENV === "development") {
 } else {
   log.setDefaultLevel('error')
 }
+
+import VueRouter from 'vue-router'
+Vue.use(VueRouter)
+import {router} from "./routes"
+
+import Main from '@/pages/main/Main'
+new Vue({
+  router,
+  render: h => h(Main),
+}).$mount('#app')

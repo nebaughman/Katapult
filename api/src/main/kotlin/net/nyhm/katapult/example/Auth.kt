@@ -9,31 +9,62 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.io.Serializable
 
-data class AuthSpec(
-    val allowRegistration: Boolean = true
+data class AuthConfig(
+  /**
+   * Provide an api endpiont for new user registration
+   */
+  val allowRegistration: Boolean = true,
+
+  /**
+   * Whether to check requests for login status and redirect to the login page if not.
+   * Some resources do not require login (hard-coded below).
+   *
+   * Do not use this if server does not need to guard endpoints. For instance,
+   * running an SPA, in which the server is either a pure API service or only serves
+   * the main page content with no need to guard other paths. In these cases, everything
+   * is bundled in the app (even the admin pages), and the api methods must guard access
+   * to the api endpoints. The client-side routing should turn non-admins away from
+   * admin pages, but this is just for user experience.
+   *
+   * Note: Presently only using SPA mode. Will experiment with other bundling schemes
+   * again later. For example:
+   *
+   *   - Login in a separate endpoint & bundle, so non-logged-in page hits can be
+   *     server-redirected to the login page and not incur full app download (if you
+   *     don't want to serve any content unless logged in).
+   *
+   *   - Admin in a separate endpoint & bundle, only served if user is already
+   *     logged in and an admin. This prevents exposing the admin pages to non-admins,
+   *     which might help obscure the admin api endpoints. However, the real security
+   *     is guarding the endpoints. Maybe more importantly, non-admins would not need to
+   *     download the admin bundle, saving some bandwidth and page load time.
+   */
+  val guardPathAccess: Boolean = true
 )
 
-class AuthModule @Inject constructor(private val spec: AuthSpec): KatapultModule {
+class AuthModule @Inject constructor(private val config: AuthConfig): KatapultModule {
 
   private val routes = {
-
-    before("/*", LoginFilter)
 
     path("/api/auth") {
       get("login") { it.process(::getLogin) }
       post("login") { it.process(::login) }
       get("logout") { it.authSession().logout() }
       post("passwd") { it.process(::changePassword) }
-      if (spec.allowRegistration) post("register") { it.process(::register) }
+      if (config.allowRegistration) post("register") { it.process(::register) }
     }
 
-    // logout page request (not api)
-    get("/logout") {
-      it.authSession().logout()
-      it.redirect("/login")
-    }
+    if (config.guardPathAccess) {
+      before("/*", LoginFilter)
 
-    before("/login") { it.authSession().logout() }
+      // logout page request (not api)
+      get("/logout") {
+        it.authSession().logout()
+        it.redirect("/login")
+      }
+
+      before("/login") { it.authSession().logout() }
+    }
   }
 
   override fun config(app: Javalin) {
@@ -67,7 +98,7 @@ class AuthModule @Inject constructor(private val spec: AuthSpec): KatapultModule
   }
 
   fun register(@Body data: RegisterData, userDao: UserDao): UserInfo {
-    if (!spec.allowRegistration) throw MethodNotAllowedResponse("Registration not allowed", emptyMap())
+    if (!config.allowRegistration) throw MethodNotAllowedResponse("Registration not allowed", emptyMap())
     if (data.name.isEmpty()) throw BadRequestResponse("Invalid user name")
     if (data.pass.isEmpty()) throw BadRequestResponse("Invalid password")
     if (userDao.findName(data.name) != null) throw BadRequestResponse("User name exists")

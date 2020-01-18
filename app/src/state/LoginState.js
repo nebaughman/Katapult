@@ -24,6 +24,24 @@ export const LoginState = new Vue({
         Log.error(error)
       })
     },
+
+    async logout() {
+      await Api.logout()
+      this.user = null
+    },
+
+    /**
+     * Provides a Promise of the user object (or null if not logged in).
+     * If already logged in, the Promise is immediately resolved.
+     * If not, the current user is fetched (and recorded).
+     */
+    async awaitUser() {
+      if (!this.user) {
+        const user = await Api.getLogin()
+        this.user = user
+      }
+      return this.user
+    },
   },
 
   created() {
