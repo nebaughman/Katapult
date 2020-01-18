@@ -145,7 +145,8 @@ class Cli: CliktCommand(
         AdminModule::class,
         ErrorModule::class,
         RequestLog::class,
-        ApiStats::class
+        ApiStats::class,
+        CorsAllOrigins::class // TODO: cli option for specific domain(s)
     )
 
     if (http) modules.add(HttpModule::class)

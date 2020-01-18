@@ -25,7 +25,10 @@ class AdminModule @Inject constructor(private val config: AdminConfig): Katapult
       post("passwd") { it.process(::passwd) }
     }
 
-    val adminApiFilter = UnauthorizedHandler { !it.authSession().hasRole(UserRole.ADMIN) }
+    val adminApiFilter = UnauthorizedHandler {
+      // cannot guard options requests (no cookies)
+      it.method() != "OPTIONS" && !it.authSession().hasRole(UserRole.ADMIN)
+    }
     before("/api/admin/*", adminApiFilter)
 
     if (config.guardPathAccess) {

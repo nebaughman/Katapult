@@ -17,12 +17,12 @@ export const LoginState = new Vue({
   },
 
   methods: {
-    updateUser() {
-      Api.getLogin().then(user => {
-        this.user = user
-      }).catch(error => {
+    async updateUser() {
+      try {
+        this.user = Api.getLogin()
+      } catch (error) {
         Log.error(error)
-      })
+      }
     },
 
     async logout() {
@@ -34,6 +34,8 @@ export const LoginState = new Vue({
      * Provides a Promise of the user object (or null if not logged in).
      * If already logged in, the Promise is immediately resolved.
      * If not, the current user is fetched (and recorded).
+     * Do not use this method if you only need to _react_ to the user property,
+     * rather than triggering the current login to be fetched.
      */
     async awaitUser() {
       if (!this.user) {
@@ -45,6 +47,7 @@ export const LoginState = new Vue({
   },
 
   created() {
-    this.updateUser()
+    // do not do this here, else api could be called before axios is configured
+    //this.updateUser()
   },
 })
