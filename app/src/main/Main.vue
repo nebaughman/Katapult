@@ -1,21 +1,17 @@
 <template>
   <div>
-    <NavBar class="mb-4"/>
+    <nav-bar class="mb-4"/>
     <div id="app" class="container">
-      <router-view>
-        <Title/>
-      </router-view>
+      <router-view></router-view>
     </div>
   </div>
 </template>
 
 <script>
   import NavBar from "@/common/NavBar"
-  import Title from "./Title"
 
   export default {
-    name: "Main",
-    components: {NavBar,Title},
+    components: {NavBar},
   }
 </script>
 

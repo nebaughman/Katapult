@@ -1,5 +1,5 @@
 import axios from "axios"
-import {Log} from "@/util/Log"
+//import {Log} from "@/util/Log"
 
 // TODO: TypeScript with proper classes (Api interface, AxiosApi impl, MockApi impl)
 

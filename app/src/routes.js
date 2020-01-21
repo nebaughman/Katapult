@@ -1,4 +1,4 @@
-import Title from "@/main/Title"
+import Home from "@/main/Home"
 import UserPage from "@/main/UserPage"
 import Admin from "@/admin/Admin"
 import Dashboard from "@/admin/Dashboard"
@@ -41,7 +41,7 @@ const routes = [
   },
   {
     path: "/",
-    component: Title,
+    component: Home,
   },
   {
     name: "not-found",

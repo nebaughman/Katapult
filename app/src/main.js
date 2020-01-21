@@ -62,7 +62,7 @@ import VueRouter from "vue-router"
 Vue.use(VueRouter)
 import {router} from "./routes"
 
-import Main from "@/pages/main/Main"
+import Main from "@/main/Main"
 new Vue({
   router,
   render: h => h(Main),

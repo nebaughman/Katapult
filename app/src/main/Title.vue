@@ -2,7 +2,7 @@
   <div class="jumbotron">
     <h3 class="display-4">
       Katapult
-      <small class="text-muted font-italic">Fire at will!</small>
+      <small class="text-muted font-italic subtitle pl-2">Fire at will!</small>
     </h3>
     <p class="lead">
       <a href="https://kotlinlang.org/">Kotlin</a>-oriented
@@ -21,7 +21,8 @@
 </script>
 
 <style scoped>
-  small {
+  .subtitle {
     font-size: 24px;
+    font-family: serif;
   }
 </style>

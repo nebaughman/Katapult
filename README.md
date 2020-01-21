@@ -23,6 +23,7 @@ This makes for easy deployment. :bulb: Also consider building `localhost` Web ap
 - [BCrypt](https://github.com/patrickfav/bcrypt): Secure salted password hashing
 - [Exposed](https://github.com/JetBrains/Exposed): ORM/DAO DB-object mapping
 - [SQLite](https://www.sqlite.org/): Database
+- [Postgres](https://www.postgresql.org/): Database
 - [JUnit](https://junit.org): Testing
 - [SLF4J](https://www.slf4j.org/): Logging
 - [Gradle](https://gradle.org/): Build system
