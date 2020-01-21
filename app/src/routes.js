@@ -1,12 +1,12 @@
-import Title from "@/pages/main/Title"
-import UserPage from "@/pages/main/UserPage"
-import Admin from "@/pages/admin/Admin"
-import Dashboard from "@/pages/admin/Dashboard"
-import Other from "@/pages/admin/Other"
-import Login from "@/pages/login/Login"
+import Title from "@/main/Title"
+import UserPage from "@/main/UserPage"
+import Admin from "@/admin/Admin"
+import Dashboard from "@/admin/Dashboard"
+import Other from "@/admin/Other"
+import Login from "@/main/Login"
 import NotFound from "@/common/NotFound"
 import {LoginState} from "@/state/LoginState"
-import VueRouter from 'vue-router'
+import VueRouter from "vue-router"
 
 const routes = [
   {
@@ -89,7 +89,7 @@ export const router = new VueRouter({
     }
   },
 
-});
+})
 
 router.beforeEach(async (to, from, next) => {
   if (to.name === "login") {
