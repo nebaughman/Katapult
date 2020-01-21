@@ -1,29 +1,29 @@
 import * as logger from 'loglevel'
 
-export const Log = {
+export class Log {
 
-  debug(...msgs) {
+  static debug(...msgs: any[]) {
     logger.debug(this.format(msgs))
-  },
+  }
 
-  info(...msgs) {
+  static info(...msgs: any[]) {
     logger.info(this.format(msgs))
-  },
+  }
 
-  warn(...msgs) {
+  static warn(...msgs: any[]) {
     logger.warn(this.format(msgs))
-  },
+  }
 
-  fail(...msgs) {
+  static fail(...msgs: any[]) {
     logger.error(this.format(msgs))
-  },
+  }
 
-  error(...msgs) {
+  static error(...msgs: any[]) {
     logger.error(this.format(msgs))
-  },
+  }
 
-  format(...msgs) {
+  private static format(...msgs: any[]) {
     return msgs ? msgs.join(', ') : "" // TODO: better formatting
-  },
+  }
 
 }

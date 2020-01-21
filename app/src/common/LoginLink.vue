@@ -8,14 +8,14 @@
 </template>
 
 <script>
-  import {LoginState} from "@/state/LoginState"
+  import {State} from "@/state/State"
 
   export default {
     name: "LoginLink",
 
     computed: {
       user() {
-        return LoginState.user
+        return State.login.user
       },
     },
   }

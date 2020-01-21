@@ -37,8 +37,7 @@
 </template>
 
 <script>
-  import {LoginState} from "@/state/LoginState"
-  import {AdminState} from "@/state/AdminState"
+  import {State} from "@/state/State"
   import {Api} from "@/state/Api"
   import {Log} from "@/util/Log"
 
@@ -60,11 +59,11 @@
       },
 
       users() {
-        return AdminState.users
+        return State.admin.users
       },
 
       currentUser() {
-        return LoginState.user ? LoginState.user.name : null
+        return State.login.user ? State.login.user.name : null
       },
     },
 

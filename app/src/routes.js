@@ -1,3 +1,4 @@
+import VueRouter from "vue-router"
 import Home from "@/main/Home"
 import UserPage from "@/main/UserPage"
 import Admin from "@/admin/Admin"
@@ -5,8 +6,7 @@ import Dashboard from "@/admin/Dashboard"
 import Other from "@/admin/Other"
 import Login from "@/main/Login"
 import NotFound from "@/common/NotFound"
-import {LoginState} from "@/state/LoginState"
-import VueRouter from "vue-router"
+import {State} from "@/state/State"
 
 const routes = [
   {
@@ -51,7 +51,7 @@ const routes = [
 ]
 
 async function beforeLogin(to, from, next) {
-  await LoginState.logout()
+  await State.login.logout()
   next()
 }
 
@@ -65,7 +65,7 @@ async function beforeLogin(to, from, next) {
  */
 async function beforeAdmin(to, from, next) {
    // await user to be loaded from server (if not already)
-   const user = await LoginState.awaitUser()
+   const user = await State.login.awaitUser()
    if (!user) next({ name: "login" }) // redundant to router.beforeEach guard (below)
    else if (user.role === "admin") next() // all is well
    else next({ name: "not-found", params: { "0": to.fullPath } }) // logged in, but not an admin
@@ -95,7 +95,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.name === "login") {
     next()
   } else {
-    const user = await LoginState.awaitUser()
+    const user = await State.login.awaitUser()
     user ? next() : next({ name: "login" })
   }
 })

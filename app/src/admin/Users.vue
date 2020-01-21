@@ -29,7 +29,7 @@
 </template>
 
 <script>
-  import {AdminState} from "@/state/AdminState"
+  import {State} from "@/state/State"
   import AddUser from "./AddUser"
   import Passwd from "./Passwd"
   import ConfirmButton from "@/common/ConfirmButton"
@@ -40,17 +40,17 @@
 
     computed: {
       users() {
-        return AdminState.users
+        return State.admin.users
       },
     },
 
     methods: {
       remove(name) {
-        AdminState.removeUser(name)
+        State.admin.removeUser(name)
       },
 
       deletable(user) {
-        return user.name !== (AdminState.user ? AdminState.user.name : null)
+        return user.name !== (State.admin.user ? State.admin.user.name : null)
       },
     },
   }

@@ -23,7 +23,7 @@
 
 <script>
   import LoginLink from "./LoginLink"
-  import {LoginState} from "@/state/LoginState"
+  import {State} from "@/state/State"
   import Href from "@/util/Href"
 
   export default {
@@ -32,11 +32,11 @@
 
     computed: {
       user() {
-        return LoginState.user
+        return State.login.user
       },
 
       isAdmin() {
-        return LoginState.isAdmin
+        return State.login.isAdmin
       },
     },
   }
