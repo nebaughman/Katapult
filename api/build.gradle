@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'net.nyhm.katapult'
-version '0.6.0-dev'
+version '0.7.0'
 
 sourceCompatibility = 1.8
 mainClassName = 'net.nyhm.katapult.example.MainKt'
