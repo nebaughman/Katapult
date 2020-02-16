@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-4 pl-2 border-left">
+  <div class="mb-4">
     <h5 v-if="title" class="card-title">{{ title }}</h5>
     <slot/>
   </div>

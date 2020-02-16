@@ -14,11 +14,16 @@
 
   // loading only needed icons
   import {
-    faTimes, faSpinner, faSignInAlt, faEllipsisH,
+    faTimes, faSpinner, faSignInAlt, faEllipsisH, faScroll,
   } from "@fortawesome/free-solid-svg-icons"
 
+  import {
+    faHandPointRight,
+  } from "@fortawesome/free-regular-svg-icons"
+
   library.add(
-    faTimes, faSpinner, faSignInAlt, faEllipsisH,
+    faTimes, faSpinner, faSignInAlt, faEllipsisH, faScroll,
+    faHandPointRight,
   )
 
   // other libraries (for example)
