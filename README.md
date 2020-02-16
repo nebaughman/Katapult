@@ -195,4 +195,4 @@ Overall, it would be desirable to develop modules for more common use-cases, suc
 
 ## License
 
-MIT &copy; Nathaniel Baughman &bull; [License](LICENSE.txt)
+[MIT License](LICENSE.txt) &copy; Nathaniel Baughman
