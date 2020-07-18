@@ -1,12 +1,15 @@
 # Katapult
 
-[Kotlin](https://kotlinlang.org/) oriented single-jar API+Web app starter kit using [Javalin](https://javalin.io) and [Vue-Cli](https://cli.vuejs.org/)
+A template project for building API services with support to (optionally) serve an SPA-style static Web app from a single executable `jar`:
+
+- API server built with [Kotlin](https://kotlinlang.org/), [Javalin](https://javalin.io), [Guice](https://github.com/google/guice)
+- App built with [Vue](https://vuejs.org/), [Vue-Cli](https://cli.vuejs.org/), [Bootstrap](https://getbootstrap.com)
 
 ## Overview
 
 The purpose of this project is to combine a number of useful libraries into a starting stack for other projects.
 
-When built, Katapult provides a single executable `jar` file that can self-serve an API (REST or session-based) and Vue Web app (single-page or multi-page).
+When built, Katapult provides a single executable `jar` file that can self-serve an API and Vue-based Web app.
 
 This makes for easy deployment. :bulb: Also consider building `localhost` Web apps.
 
@@ -23,7 +26,7 @@ This makes for easy deployment. :bulb: Also consider building `localhost` Web ap
 - [BCrypt](https://github.com/patrickfav/bcrypt): Secure salted password hashing
 - [Exposed](https://github.com/JetBrains/Exposed): ORM/DAO DB-object mapping
 - [SQLite](https://www.sqlite.org/): Database
-- [Postgres](https://www.postgresql.org/): Database
+- [PostgreSQL](https://www.postgresql.org/): Database
 - [JUnit](https://junit.org): Testing
 - [SLF4J](https://www.slf4j.org/): Logging
 - [Gradle](https://gradle.org/): Build system
@@ -36,12 +39,14 @@ Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let'
 - [Vue](https://vuejs.org/): Front-end rendering
 - [Vue-Cli](https://cli.vuejs.org/): Vue project tools
 - [Vue Router](https://router.vuejs.org/): Front-end routing system
-- [Vue-FontAwesome](https://github.com/FortAwesome/vue-fontawesome): FontAwesome fonts in Vue!
+- [Vue-FontAwesome](https://github.com/FortAwesome/vue-fontawesome): FontAwesome fonts in Vue
 - [Bootstrap](https://getbootstrap.com): UI framework
 - [Axios](https://github.com/axios/axios): AJAX calls
 - [Yarn](https://yarnpkg.com): Dependency & Build system
+- [TypeScript](https://www.typescriptlang.org/): TypeScript for business logic
+- [Vue Property Decorator](https://github.com/kaorun343/vue-property-decorator): Reactive TypeScript objects with @Component
 
-> I'd like to add TypeScript to the ecosystem (for TS classes, as well as TS-based Vue components), but I don't have the configuration quite right yet.
+> **Not** using [Vue Class Components](https://github.com/vuejs/vue-class-component)
 
 ### Project Structure
 
@@ -49,11 +54,11 @@ Two subprojects:
 
 - The `api` project augments Javalin with a modular framework and dependency injection system. Example modules are included, which help with authentication and session management, database/DAO integration (via Exposed), HTTPS support, Mustache templates, CORS headers, and static Vue app hosting.
 
-- The `app` project includes an example Vue-Cli app, including Vue Router, Bootstrap, and FontAwesome, configured as an SPA (but supporting multiple entry points). `yarn build` copies `dist` to the API server's `resources/app`, where it is bundled and served as static content.
+- The `app` project includes an example Vue-Cli app, including Vue Router, Bootstrap, and FontAwesome, configured as a single-page-app. `yarn build` copies `dist` to the API server's `resources/app`, where it is bundled and served as static content.
 
 ### Deployment
 
-Create the single executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty.
+Create an executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty.
 
 A [Java Runtime Environment](https://java.com) is required to run Katapult. In general, execute a jar like: 
 
@@ -61,25 +66,27 @@ A [Java Runtime Environment](https://java.com) is required to run Katapult. In g
 java -jar <the.jar> --options...
 ```
 
-`example.Main` runs a sample api/app. Kindly refer to the source for command-line options.
+`example.Main` runs a sample bundled api+app. Kindly refer to the source for sample command-line options.
 
-### Extension
+Notice that the Vue app does not have to be served by the api server bundle. The api server and Vue app can be built and hosted separately.
 
-The included api/app are for demonstration purposes. As Katapult is still very much an experimental work-in-progress, there is not a clearly defined way to utilize Katapult for other projects.
+### Usage
 
-Consider [forking](https://help.github.com/articles/fork-a-repo/) Katapult and developing your app/api in a different directory structure. [Sync your fork](https://help.github.com/articles/syncing-a-fork/) for Katapult updates (and beware of breaking changes).
+Katapult is a full-stack template project. The included configuration, libraries, api, app, etc., are for demonstration purposes.
+
+To make use of Katpult for your own project, consider [forking](https://help.github.com/articles/fork-a-repo/) and taking what you want!
 
 ## Javalin Server
 
 The `api` project integrates a number of components for building an HTTP(S) API (RESTful or otherwise) and hosting static pages (such as the Vue app).
 
-- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup, such as adding API route handlers. Modules (and endpoints) take advantage of dependency injection via Guice.
+- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup, such as adding API route handlers. Modules (and _endpoints_) take advantage of dependency injection via [Guice](https://github.com/google/guice).
 
 - **Endpoints:** Katapult augments Javalin with dependency-injected endpoint handlers and a `@Body` annotation for conveniently extracting the request body as a typed object.
 
 - **Database/DAO:** Experimenting with [Exposed](https://github.com/JetBrains/Exposed) for data access.
  
-    - Sample SQLite module (should be easy to add others)
+    - Sample SQLite & PostgreSQL Katpult DbDriver implementations
     
     - Sample `UserDao`, which further simplifies and isolates business logic from Exposed library (except for Exposed `transaction`, which is kind of hard to avoid)
 
@@ -87,13 +94,13 @@ The `api` project integrates a number of components for building an HTTP(S) API 
   
   > Explaining how to obtain SSL certificate files (eg, from Let's Encrypt) is outside the scope of this project.
   
-- **Templating:** Javalin supports template engines for server-rendered HTML. An example [Mustache](https://mustache.github.io/) Katapult module is provided.
+- **Templating:** Javalin supports template engines for server-side rendering. An example [Mustache](https://mustache.github.io/) Katapult module is provided.
 
 - **External Data:** The example server stores external data in a data directory. This includes SQLite database, session files, SSL certificate files, etc. Refer to the command-line options for the example server.
 
 ### Now with Guice
 
-Dependencies are resolved and injected using Guice dependency injection framework. Guice is used for Module startup and endpoint handling.
+Dependencies are resolved and injected using [Guice](https://github.com/google/guice) dependency injection framework. Guice is used for Module startup and endpoint handling.
 
 #### Modules
 
@@ -112,10 +119,10 @@ In the above example, `MyData` must be available to the Guice Injector. Refer to
 Katapult endpoint handlers are dependency-injected `KFunction` references. Katapult augments the Javalin `Context` with a `process(endpoint: KFunction<*>)` function. Setting up a route can look like this:
 
 ```
-get("/api/path/my-resource") { it.process(::getMyResource) }
+get("/api/path/my-resource") { it.process(::login) }
 ```
 
-`::getMyResource` is a `KFunction` reference that will have its parameters injected. The following can be injected:
+`::login` is a `KFunction` reference that will have its parameters injected. The following can be injected:
 
 - Javalin's request `Context` instance
 - At most one parameter annotated with `@Body` (explained below)
@@ -140,7 +147,7 @@ In the above example, `Context`, `UserDao`, and `LoginRequest` will be injected.
 
 The `app` project is a sample Vue-Cli SPA with some additional configuration (Bootstrap, FontAwesome, Axios, etc). The Vue app itself is just an example starting point.
 
-The primary point is that the Vue app can be served as static content from the Javalin server, allowing the whole app/api to be bundled as a single executable jar.
+The primary point is that the Vue app can be served as static content from the Katapult API service, allowing the whole app/api to be bundled as a single executable jar.
 
 If bundling is not desirable, the Vue app could be hosted separately.
 
@@ -192,6 +199,113 @@ Overall, it would be desirable to develop modules for more common use-cases, suc
 - The [git](https://git-scm.com/) source repository is hosted on [GitHub](https://github.com/nebaughman/Katapult)
 
 - I develop in [Ubuntu](https://www.ubuntu.com/) with [IntelliJ IDEA](https://www.jetbrains.com/idea/) (Community Edition)
+
+# Appendix A: Library Notes
+
+Katapult depends on a variety of libraries. Here are some helpful notes for reference.
+
+## Exposed
+
+An [Exposed](https://github.com/JetBrains/Exposed) Entity can look like this:
+
+```
+data class UserInfo(val name: String, val role: UserRole) {
+  constructor(user: UserEntity): this(user.name, user.role)
+}
+
+object UserConverter: StdConverter<UserEntity, UserInfo>() {
+  override fun convert(value: UserEntity) = UserInfo(value)
+}
+
+@JsonSerialize(converter = UserConverter::class)
+class UserEntity(id: EntityID<Int>): IntEntity(id) {
+  companion object: IntEntityClass<UserEntity>(Users)
+
+  var name by Users.name
+  var pass by Users.pass
+  var role by Users.role
+}
+```
+
+Entity class needs `@JsonSerialize` if it is to be sent via an API call.
+
+Or, instead of using Exposed Entity classes, just have data classes. Obtain what you want from the db with Exposed DSL, rather than Entity implementations:
+
+```
+data class Shortcut(
+  val name: String,
+  val date: String,
+  val id: Int? = null
+)
+
+class ShortcutDao {
+  fun list() = transaction {
+    ShortcutTable.selectAll().orderBy(ShortcutTable.date).map {
+      Shortcut(
+        it[ShortcutTable.name],
+        it[ShortcutTable.date],
+        it[ShortcutTable.id].value
+      )
+    }
+  }
+}
+```
+
+A bit more tedious, but also more specific. The data classes can be Json serialized without explicit converters.
+
+But, instead of defining classes that represent what data you want from the database, you have to construct queries, iterate the results, and construct instances. Also, Entity classes can be manipulated (in a _transaction_) and will automatically save changes back to the database (at the end of the _transaction_ block). Otherwise, you'd have to explicitly update table rows.
+
+## FontAwesomeIcon
+
+`Icon.vue` is a component to proxy access to the underlying FontAwesomeIcon component.
+
+Primary purpose is to avoid loading full FA icon libraries and only load the icons specifically needed by the app.
+
+This could be done just by creating an `icons.js` (imported by `main.js`), which imports the icons, but wanted to try doing as a component, to add additional behavior, props, controls, bookkeeping, etc.
+
+Previously, was loading full `far` and `fas` libraries:
+
+```
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { far } from '@fortawesome/free-regular-svg-icons'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+library.add(far)
+library.add(fas)
+```
+
+That resulted in production `yarn build` bundle (with some warnings):
+
+```
+File                                   Size              Gzipped
+dist/js/chunk-vendors.ef987704.js      1419.72 KiB       463.13 KiB
+dist/js/index.7de3ced9.js              70.40 KiB         17.16 KiB
+dist/css/chunk-vendors.b89365ac.css    168.44 KiB        23.79 KiB
+dist/css/index.b8a81f59.css            3.25 KiB          1.17 KiB
+```
+
+Changing to loading individual icons:
+
+```
+import { faSyncAlt, faUpload } from "@fortawesome/free-solid-svg-icons"
+import { faCheckCircle } from "@fortawesome/free-regular-svg-icons"
+library.add(faSyncAlt, faUpload, faCheckCircle) // more to come
+```
+
+With these three icons (from two libraries) `yarn build` shows `chunk-vendors` is about half as big!
+
+```
+File                                   Size              Gzipped
+dist/js/chunk-vendors.998e6458.js      714.70 KiB        234.59 KiB
+dist/js/index.0c34d1f7.js              70.41 KiB         17.16 KiB
+dist/css/chunk-vendors.b89365ac.css    168.44 KiB        23.79 KiB
+dist/css/index.b8a81f59.css            3.25 KiB          1.17 KiB
+```
+
+Notes:
+
+- Loading two icons from only `solid` library (none from `regular`) did _not_ reduce `chunk-vendors` size by any meaningful amount. This implies that webpack _is_ only including the icons needed.
+- After including 12 icons, `chunk-vendors` only `718.25 KiB` (`236.01 KiB` gzipped)
+- `yarn build` still warns that initial site payload is pretty large
 
 ## License
 
