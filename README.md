@@ -56,27 +56,48 @@ Two subprojects:
 
 - The `app` project includes an example Vue-Cli app, including Vue Router, Bootstrap, and FontAwesome, configured as a single-page-app. `yarn build` copies `dist` to the API server's `resources/app`, where it is bundled and served as static content.
 
-### Deployment
-
-Create an executable jar via `shadowJar` (see `buildjar.sh`). All static resources (including Vue app) are bundled within the jar and served via Javalin/Jetty.
-
-A [Java Runtime Environment](https://java.com) is required to run Katapult. In general, execute a jar like: 
-
-```
-java -jar <the.jar> --options...
-```
-
-`example.Main` runs a sample bundled api+app. Kindly refer to the source for sample command-line options.
-
-Notice that the Vue app does not have to be served by the api server bundle. The api server and Vue app can be built and hosted separately.
-
 ### Usage
 
 Katapult is a full-stack template project. The included configuration, libraries, api, app, etc., are for demonstration purposes.
 
 To make use of Katpult for your own project, consider [forking](https://help.github.com/articles/fork-a-repo/) and taking what you want!
 
-## Javalin Server
+### Build
+
+**1. Vue App**
+
+Build vue app from `/app`:
+
+```
+yarn build
+```
+
+This creates a production build under `/app/dist`. This app distribution is automatically copied to `/api/src/main/resources/app/` by the build script.
+
+**2. Api Server (+ App dist)**
+
+Build api server from `/api`:
+
+```
+gradle shadowJar
+```
+
+This creates `/api/build/libs/katapult-x.y.z-all.jar` (where `x.y.z` is the version), which is the single executable jar, which runs the api server and (optionally) hosts the app as static content.
+
+### Deploy
+
+Send `katapult-x.y.z-all.jar` to the production server. If _not_ hosting the app as static content, currently must unpack the app from the jar to be hosted otherwise (eg, by nginx).
+
+> Main.kt could provide a `--deploy-app` option to copy the app contents out to a target path.
+
+`example.Main` runs a sample bundled api+app. Kindly refer to the source for sample command-line options.
+
+## Development
+
+- From `/app` run `yarn serve` (serves on http://localhost:8080 with hot reloading)
+- From `/api` (or in IntelliJ) run gradle `api [run]` target to build & run api service
+
+### Javalin Server
 
 The `api` project integrates a number of components for building an HTTP(S) API (RESTful or otherwise) and hosting static pages (such as the Vue app).
 
@@ -98,7 +119,7 @@ The `api` project integrates a number of components for building an HTTP(S) API 
 
 - **External Data:** The example server stores external data in a data directory. This includes SQLite database, session files, SSL certificate files, etc. Refer to the command-line options for the example server.
 
-### Now with Guice
+#### Now with Guice
 
 Dependencies are resolved and injected using [Guice](https://github.com/google/guice) dependency injection framework. Guice is used for Module startup and endpoint handling.
 
@@ -143,7 +164,7 @@ In the above example, `Context`, `UserDao`, and `LoginRequest` will be injected.
 
 > Configuring the Guice Injector is a bit out-of-scope for these instructions, but have a look at `example.Main` and read the Guice instructions.
 
-## Vue App
+### Vue App
 
 The `app` project is a sample Vue-Cli SPA with some additional configuration (Bootstrap, FontAwesome, Axios, etc). The Vue app itself is just an example starting point.
 
@@ -153,7 +174,7 @@ If bundling is not desirable, the Vue app could be hosted separately.
 
 > Hosting the API on a different domain from the app may require CORS headers to be configured correctly. A CORS module is provided, but has not been well tested.
 
-## Hybrid Multi-Page Mode
+#### Hybrid Multi-Page Mode
 
 > **DEPRECATED**
 > 
@@ -192,7 +213,7 @@ Overall, it would be desirable to develop modules for more common use-cases, suc
 
 > Advice is most welcome!
 
-## Development
+## Project
 
 - This project follows a development process inspired by [nvie's GIT branching model](https://nvie.com/posts/a-successful-git-branching-model/)
 
