@@ -64,7 +64,7 @@ class Katapult(val modules: Modules, val injector: Injector = Guice.createInject
     // request context Processor stored as attribute
     app.attribute(Processor::class.java, InjectedProcessor(injector))
     mods.forEach { it.config(app) } // modules can config Javalin app
-    app.start() // http(s) connector(s) specif(ies|y) port(s)
+    app.start() // http(s) connector(s) specif(y|ies) port(s)
     this.app = app // prior exception will not set app
   }
 

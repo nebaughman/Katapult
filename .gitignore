@@ -1,7 +1,5 @@
 .idea
-
-# Created by buildjar
+*.iml
 /katapult*.jar
-
-# Created if Katapult jar is executed in project root
 /data
+/local

@@ -1,6 +1,7 @@
 import com.google.inject.AbstractModule
 import com.google.inject.Guice
 import org.junit.jupiter.api.Test
+
 interface Fruit
 
 /**

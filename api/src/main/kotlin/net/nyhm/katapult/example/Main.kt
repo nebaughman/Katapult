@@ -70,7 +70,7 @@ class Cli: CliktCommand(
       "--data-dir",
       help = "Data directory"
   ).file(
-      fileOkay = false
+      canBeFile = false
   ).default(File(System.getProperty("user.dir"), "data"))
 
   val sessionFiles by option(
