@@ -4,10 +4,10 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
-group 'net.nyhm.katapult'
+group 'net.nyhm'
 version '0.7.2'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 11
 mainClassName = 'net.nyhm.katapult.example.MainKt'
 
 repositories {
@@ -34,6 +34,8 @@ dependencies {
     implementation 'org.xerial:sqlite-jdbc:3.32.3.2'
     implementation 'org.postgresql:postgresql:42.2.18'
 
+    implementation 'net.nyhm:pick:0.0.0' // see settings.gradle (github repo)
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
@@ -55,10 +57,11 @@ classes {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
+
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 // An attempt to separate example into another sourceSet

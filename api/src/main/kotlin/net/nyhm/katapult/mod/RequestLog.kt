@@ -15,11 +15,13 @@ interface RequestLogger {
  * Javalin can have only one request logger. If more than one is needed, use this module
  * and register RequestLogger instances here. They'll each be given the chance to log.
  */
-object RequestLog: KatapultModule {
+class RequestLog: KatapultModule {
 
   private val loggers = mutableListOf<RequestLogger>()
 
   fun add(logger: RequestLogger) = loggers.add(logger)
+
+  fun addAll(loggers: List<RequestLogger>) = this.loggers.addAll(loggers)
 
   override fun config(config: JavalinConfig) {
     config.requestLogger { ctx, ms ->

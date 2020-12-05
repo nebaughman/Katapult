@@ -1,1 +1,8 @@
 rootProject.name = 'katapult'
+
+// https://blog.gradle.org/introducing-source-dependencies
+sourceControl {
+    gitRepository("https://github.com/nebaughman/pick.git") {
+        producesModule("net.nyhm:pick")
+    }
+}

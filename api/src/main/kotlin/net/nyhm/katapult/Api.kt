@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import com.google.inject.Injector
 import io.javalin.http.Context
 import io.javalin.http.HttpResponseException
+import net.nyhm.pick.Di
 import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -54,6 +55,33 @@ class InjectedProcessor @Inject constructor(@Inject val injector: Injector): Pro
       if (paramClass == Context::class) deps.add(ctx)
       else if (isBodyParam(it)) deps.add(ctx.bodyAsClass(paramClass.java))
       else deps.add(injector.getInstance(paramClass.java))
+    }
+
+    try {
+      val result = endpoint.call(*deps.toTypedArray())
+      if (result != null) ctx.json(result)
+    } catch (e:InvocationTargetException) {
+      if (e.cause is HttpResponseException) throw e.cause as HttpResponseException
+      else throw e
+    }
+  }
+
+  private fun isBodyParam(param: KParameter) = param.findAnnotation<Body>() != null
+}
+
+/**
+ * A [Processor] that uses a dependency injector to resolve dependencies.
+ */
+class DiProcessor(private val di: Di): Processor {
+
+  override fun process(ctx: Context, endpoint: KFunction<*>) {
+
+    val deps = mutableListOf<Any>()
+    endpoint.valueParameters.forEach {
+      val paramClass = it.type.classifier as KClass<*>
+      if (paramClass == Context::class) deps.add(ctx)
+      else if (isBodyParam(it)) deps.add(ctx.bodyAsClass(paramClass.java))
+      else deps.add(di.get(paramClass))
     }
 
     try {

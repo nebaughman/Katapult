@@ -7,10 +7,9 @@ import com.github.ajalt.clikt.parameters.groups.required
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
-import com.google.inject.AbstractModule
-import com.google.inject.Guice
 import net.nyhm.katapult.*
 import net.nyhm.katapult.mod.*
+import net.nyhm.pick.DiBuilder
 import java.io.File
 import java.util.*
 
@@ -94,82 +93,67 @@ class Cli: CliktCommand(
 
     dataDir.mkdirs()
 
-    val config = object : AbstractModule() {
-      override fun configure() {
-        bind(SpaSpec::class.java).toInstance(SpaSpec())
-        bind(UsersSpec::class.java).toInstance(UsersSpec(Auth::hash))
-        bind(AuthConfig::class.java).toInstance(AuthConfig(true, false))
-        bind(AdminConfig::class.java).toInstance(AdminConfig(false))
-
-        bind(UserDao::class.java).to(ExposedUserDao::class.java)
-
-        when (val it = db) {
+    val config = DiBuilder()
+      .register(SpaSpec())
+      .register(UsersSpec(Auth::hash))
+      .register(AuthConfig(true, false))
+      .register(AdminConfig(false))
+      .registerSingleton(UserDao::class) { ExposedUserDao(it.get()) }
+      .register(SessionSpec(
+        dataDir = if (sessionFiles) dataDir else null,
+        timeoutSeconds = sessionTimeout // may be null
+      ))
+      .register(HttpSpec(httpPort))
+      .register(HttpsSpec(dataDir, httpsPort))
+      .register(RedirectSpec(
+        { it.scheme() == "http" && it.port() == httpPort },
+        httpsPort,
+        "https"
+      ))
+      .registerSingleton(Processor::class) { DiProcessor(it) }
+      .also { di ->
+        when (val db = db) { // awkward
           is SqliteOptions -> {
-            bind(DbDriver::class.java).to(SqliteDriver::class.java)
-            val file = if (it.file.isAbsolute) it.file else dataDir.resolve(it.file) // TODO: test relative path
-            bind(SqliteConfig::class.java).toInstance(SqliteConfig(file))
+            di.registerSingleton(DbDriver::class) { SqliteDriver(it.get()) }
+            val file = if (db.file.isAbsolute) db.file else dataDir.resolve(db.file) // TODO: test relative path
+            di.register(SqliteConfig(file))
           }
           is PostgresOptions -> {
-            bind(DbDriver::class.java).to(PostgresDriver::class.java)
-            bind(PostgresConfig::class.java).toInstance(PostgresConfig(
-              it.host, it.name, it.user, it.pass
-            ))
+            di.registerSingleton(DbDriver::class) { PostgresDriver(it.get()) }
+            di.register(PostgresConfig(db.host, db.name, db.user, db.pass))
           }
         }
-
-        bind(SessionSpec::class.java).toInstance(SessionSpec(
-          dataDir = if (sessionFiles) dataDir else null,
-          timeoutSeconds = sessionTimeout // may be null
-        ))
-
-        bind(HttpSpec::class.java).toInstance(HttpSpec(httpPort))
-        bind(HttpsSpec::class.java).toInstance(HttpsSpec(dataDir, httpsPort))
-        bind(RedirectSpec::class.java).toInstance(RedirectSpec(
-            { it.scheme() == "http" && it.port() == httpPort },
-            httpsPort,
-            "https"
-        ))
-        bind(Processor::class.java).to(InjectedProcessor::class.java)
-
-        // Guice doesn't understand Kotlin object singletons, so have to give it an instance
-        bind(RequestLog::class.java).toInstance(RequestLog)
       }
-    }
+      .register(AccessLogger)
+      .registerSingleton { ExposedDb(it.get()) }
+      // register modules
+      .registerSingleton { SessionModule(it.get()) }
+      .registerSingleton { AuthModule(it.get()) }
+      .register(AppModule)
+      .registerSingleton { SpaModule(it.get()) }
+      .registerSingleton { UsersModule(it.get(), it.get()) }
+      .registerSingleton { AdminModule(it.get()) }
+      .register(ErrorModule)
+      .registerSingleton { RequestLog().apply { addAll(it.getAll()) } }
+      .registerSingleton { ApiStats(it.get()) }
+      .register(CorsAllOrigins)
+      .also { di ->
+        if (http) di.registerSingleton { HttpModule(it.get()) }
+        if (https) di.registerSingleton { HttpsModule(it.get()) }
+        if (http && https) di.registerSingleton { RedirectHandler(it.get()) } // if both http & https, redirect http to https port
+      }
+      .registerSingleton { Katapult(it.getAll(), it.get()) }
+      .di
 
-    val modules = mutableListOf(
-        SessionModule::class,
-        AuthModule::class,
-        AppModule::class,
-        SpaModule::class,
-        UsersModule::class,
-        AdminModule::class,
-        ErrorModule::class,
-        RequestLog::class,
-        ApiStats::class,
-        CorsAllOrigins::class // TODO: cli option for specific domain(s)
-    )
-
-    if (http) modules.add(HttpModule::class)
-
-    if (https) modules.add(HttpsModule::class)
-
-    // if both http & https, redirect http to https port
-    if (http && https) modules.add(RedirectModule::class)
-
-    val injector = Guice.createInjector(config)
-
-    // if there is a RequestLog module, add AccessLogger
-    injector.getInstance(RequestLog::class.java)?.add(AccessLogger)
-    // TODO: instead, this could/should be done via a module
-
-    Katapult(modules, injector).start()
+    config.get(Katapult::class).start()
   }
 }
 
 object BuildProperties {
   private val props: Properties by lazy {
     Properties().apply {
-      load(BuildProperties.javaClass.getResource("/project.properties").openStream())
+      val url = BuildProperties.javaClass.getResource("/project.properties")
+      if (url != null) load(url.openStream())
     }
   }
 

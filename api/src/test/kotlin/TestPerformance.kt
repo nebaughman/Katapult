@@ -2,6 +2,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.post
 import net.nyhm.katapult.*
+import net.nyhm.pick.DiBuilder
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.client.util.StringContentProvider
 import org.eclipse.jetty.http.HttpHeader
@@ -72,7 +73,11 @@ class TestPerformance {
   @Test fun testReflect() = testPerformance("reflect")
 
   private fun testPerformance(endpoint: String) {
-    val katapult = Katapult(listOf(TestModule::class)).start()
+    val di = DiBuilder()
+      .register(TestModule())
+      .register(Processor::class) { DiProcessor(it) }
+      .di
+    val katapult = Katapult(di.getAll(), di.get()).start()
     val ms = call(endpoint, TestData("asdf"), 8000)
     println("$endpoint ${ms}ms")
     katapult.stop()
