@@ -3,7 +3,6 @@ package net.nyhm.katapult.example
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
-import com.google.inject.Inject
 import io.javalin.core.security.Role
 import net.nyhm.katapult.ExposedDb
 import net.nyhm.katapult.KatapultModule
@@ -26,7 +25,7 @@ data class UsersSpec(
  * Sample Users module, which initializes users table.
  * Requires a DB module to have been initialized first.
  */
-class UsersModule @Inject constructor(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
+class UsersModule(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
 
   init {
 
@@ -125,7 +124,7 @@ object Users: IntIdTable("users") {
  * Note that data objects may be fetched without a transaction, then later wrapped in a transaction
  * for mutation; or the entire operation may be wrapped in a transaction.
  */
-class ExposedUserDao @Inject constructor(db: ExposedDb): UserDao {
+class ExposedUserDao(db: ExposedDb): UserDao {
 
   init {
     db.init(Users)

@@ -1,6 +1,5 @@
 package net.nyhm.katapult.mod
 
-import com.google.inject.Inject
 import io.javalin.core.JavalinConfig
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.info
@@ -22,7 +21,7 @@ data class SessionSpec(
  *
  * Optionally set a session timeout
  */
-class SessionModule @Inject constructor(private val spec: SessionSpec): KatapultModule {
+class SessionModule(private val spec: SessionSpec): KatapultModule {
   override fun config(config: JavalinConfig) {
 
     if (spec.empty) return // no custom session handler

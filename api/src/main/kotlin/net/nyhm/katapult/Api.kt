@@ -1,7 +1,5 @@
 package net.nyhm.katapult
 
-import com.google.inject.Inject
-import com.google.inject.Injector
 import io.javalin.http.Context
 import io.javalin.http.HttpResponseException
 import net.nyhm.pick.Di
@@ -42,9 +40,9 @@ interface Processor {
   fun process(ctx: Context, endpoint: KFunction<*>)
 }
 
-/**
+/*
  * A [Processor] that uses an [Injector] to resolve dependencies.
- */
+ *
 class InjectedProcessor @Inject constructor(@Inject val injector: Injector): Processor {
 
   override fun process(ctx: Context, endpoint: KFunction<*>) {
@@ -68,6 +66,7 @@ class InjectedProcessor @Inject constructor(@Inject val injector: Injector): Pro
 
   private fun isBodyParam(param: KParameter) = param.findAnnotation<Body>() != null
 }
+*/
 
 /**
  * A [Processor] that uses a dependency injector to resolve dependencies.

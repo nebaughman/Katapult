@@ -1,7 +1,6 @@
 package net.nyhm.katapult.mod
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.http.Context
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 // TODO: update interval configuration from injector
-class ApiStats @Inject constructor(requestLog: RequestLog) : KatapultModule {
+class ApiStats(requestLog: RequestLog) : KatapultModule {
 
   private val reporter = EndpointReporter()
   private val logger = ApiLogger(reporter)

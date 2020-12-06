@@ -1,6 +1,5 @@
 package net.nyhm.katapult.mod
 
-import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.http.Context
 import io.javalin.apibuilder.ApiBuilder
@@ -17,7 +16,7 @@ data class HttpSpec(
 /**
  * Adds an HTTP server listening port
  */
-class HttpModule @Inject constructor(val spec: HttpSpec): KatapultModule {
+class HttpModule(val spec: HttpSpec): KatapultModule {
   override fun config(server: Server) {
     info { "HTTP port ${spec.port}" }
     server.addConnector(
@@ -36,7 +35,7 @@ data class RedirectSpec(
  * Adds a Javalin redirect router, which will issue a redirect to the same url at different
  * port and scheme. Use this, for example, to redirect HTTP traffic to HTTPS port.
  */
-class RedirectModule @Inject constructor(val spec: RedirectSpec): KatapultModule {
+class RedirectModule(val spec: RedirectSpec): KatapultModule {
   override fun config(app: Javalin) {
     app.routes {
       ApiBuilder.before { ctx ->

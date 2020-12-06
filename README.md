@@ -1,9 +1,6 @@
 # Katapult
 
-A template project for building API services with support to (optionally) serve an SPA-style static Web app from a single executable `jar`:
-
-- API server built with [Kotlin](https://kotlinlang.org/), [Javalin](https://javalin.io), [Guice](https://github.com/google/guice)
-- App built with [Vue](https://vuejs.org/), [Vue-Cli](https://cli.vuejs.org/), [Bootstrap](https://getbootstrap.com)
+A template project for building API services with support to (optionally) serve a static Vue single-page-app from a single executable `jar`.
 
 ## Overview
 
@@ -21,7 +18,7 @@ This makes for easy deployment. :bulb: Also consider building `localhost` Web ap
 
 - [Kotlin](https://kotlinlang.org/) (& [Java](https://java.com)): Core language
 - [Javalin](https://javalin.io) (& [Jetty](https://www.eclipse.org/jetty/)): API server
-- [Guice](https://github.com/google/guice): Dependency injection
+- [Pick](https://github.com/nebaughman/pick/)
 - [Clikt](https://github.com/ajalt/clikt): Command-line processing
 - [BCrypt](https://github.com/patrickfav/bcrypt): Secure salted password hashing
 - [Exposed](https://github.com/JetBrains/Exposed): ORM/DAO DB-object mapping
@@ -32,7 +29,7 @@ This makes for easy deployment. :bulb: Also consider building `localhost` Web ap
 - [Gradle](https://gradle.org/): Build system
 - [ShadowJar](https://github.com/johnrengelman/shadow): Single-JAR bundler
 
-Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let's Encrypt](https://letsencrypt.org/) - no messing with `jks` files!
+Supports HTTPS by reading `fullchain.pem` and `privkey.pem` as provided by [Let's Encrypt](https://letsencrypt.org/) - *no messing with `jks` files!*
 
 **Client:**
 
@@ -60,7 +57,7 @@ Two subprojects:
 
 Katapult is a full-stack template project. The included configuration, libraries, api, app, etc., are for demonstration purposes.
 
-To make use of Katpult for your own project, consider [forking](https://help.github.com/articles/fork-a-repo/) and taking what you want!
+To make use of Katpult for your own project, consider cloning/copying/forking and taking what you want!
 
 ### Build
 
@@ -86,7 +83,7 @@ This creates `/api/build/libs/katapult-x.y.z-all.jar` (where `x.y.z` is the vers
 
 ### Deploy
 
-Send `katapult-x.y.z-all.jar` to the production server. If _not_ hosting the app as static content, currently must unpack the app from the jar to be hosted otherwise (eg, by nginx, apache, or your favorite hosting service).
+Send `katapult-x.y.z-all.jar` to a server. If _not_ hosting the app as static content, currently must unpack the app from the jar to be hosted otherwise (eg, by nginx, apache, or your favorite static hosting service).
 
 > TODO: Main.kt could provide a `--deploy-app` option to copy the app contents out to a target path.
 
@@ -101,7 +98,7 @@ Send `katapult-x.y.z-all.jar` to the production server. If _not_ hosting the app
 
 The `api` project integrates a number of components for building an HTTP(S) API (RESTful or otherwise) and hosting static pages (such as the Vue app).
 
-- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup, such as adding API route handlers. Modules (and _endpoints_) take advantage of dependency injection via [Guice](https://github.com/google/guice).
+- **Modules:** Katapult includes a simple module system. Modules extend `KatapultModule` and are given the opportunity to augment the Javalin server upon startup, such as adding API route handlers. Modules (and _endpoints_) take advantage of dependency injection via [Pick](https://github.com/nebaughman/pick/).
 
 - **Endpoints:** Katapult augments Javalin with dependency-injected endpoint handlers and a `@Body` annotation for conveniently extracting the request body as a typed object.
 
@@ -115,21 +112,13 @@ The `api` project integrates a number of components for building an HTTP(S) API 
 
 - **External Data:** The example server stores external data in a data directory. This includes SQLite database, session files, SSL certificate files, etc. Refer to the command-line options for the example server.
 
-#### Now with Guice
+#### No longer with Guice!
 
-Dependencies are resolved and injected using [Guice](https://github.com/google/guice) dependency injection framework. Guice is used for Module startup and endpoint handling.
+Guice was a bit ugly in Kotlin. Now using [Pick](https://github.com/nebaughman/pick/) for simple dependency configuration.
 
 #### Modules
 
-`KatapultModule` classes must be either `object` instances (Kotlin singletons) or constructable by Guice (with an `@Inject` constructor):
-
-```
-class MyModule @Inject constructor(private val myData: MyData): KatapultModule {
- ...
-}
-```
-
-In the above example, `MyData` must be available to the Guice Injector. Refer to `example.Main` for an example of setting up an Injector for use by Katapult.
+Katapult modules extend `KatapultModule` (... no longer any Guice caveats or `@Inject` annotations).
 
 #### Endpoints
 
@@ -143,7 +132,7 @@ get("/api/path/my-resource") { it.process(::login) }
 
 - Javalin's request `Context` instance
 - At most one parameter annotated with `@Body` (explained below)
-- Any other instance available to the configured Guice Injector
+- Any other instances available to the configured dependency injector
 
 Katapult adds a convenience `@Body` annotation, which transforms the request body into an object (via Javalin's `Context.getBodyAsClass(..)`) and injects it into the handler function. An endpoint handler function might look like:
 
@@ -152,13 +141,17 @@ fun login(ctx: Context, userDao: UserDao, @Body data: LoginRequest) { ... }
 
 data class LoginRequest(
   val username: String,
-  val password: String
+  val password: String,
 )
 ```
 
-In the above example, `Context`, `UserDao`, and `LoginRequest` will be injected. Notice that `LoginRequest` is a data class that is extracted from the request body. The Guice Injector configured for the Katapult server must be able to obtain a `UserDao` instance.
+In the above example, `Context`, `UserDao`, and `LoginRequest` will be injected. 
 
-> Configuring the Guice Injector is a bit out-of-scope for these instructions, but have a look at `example.Main` and read the Guice instructions.
+- Context is the Javalin `Context` of the request 
+- `LoginRequest` is a data class that is extracted from the request body
+- `UserDao` is obtained by the configured dependency injector
+
+> Have a look at `example.Main` to see how the dependencies are configured
 
 #### Exposed
 
@@ -323,28 +316,38 @@ Katapult can serve HTTPS if certificate/key files have been prepared (eg, from t
 
 The Katapult (Javalin/Jetty) server is directly exposed to all Internet requests (app resources as well as API calls). This may be hard to scale, and may be more vulnerable to attacks.
 
+### Separating Static App from API
+
 Instead of hosting everything as one process, consider separating the App, API, and DB services:
 
 ![Katapult Api Architecture](./docs/KatapultApiArchitecture.svg)
 
 In this example, Katapult is only handling API requests. An [Nginx](https://www.nginx.com/) reverse proxy (or similar) service is hosting all static App content. This proxy service handles all HTTPS calls from the Internet. Katapult does not need to handle HTTPS and is not exposed directly to Internet traffic.
 
-Nginx can also be configured to host protected content. In this scenario, a _protected_ resource requires a user to be authenticated & authorized. Nginx can be configured to make an [`auth_request`](http://nginx.org/en/docs/http/ngx_http_auth_request_module.html) to Katapult for permission before serving protected content. This way, Nginx is still serving all site content to the Internet, while Katapult exclusively handles business logic (including authentication & authorization).
+Nginx can also be configured to host protected content. In this scenario, a _protected_ resource requires a user to be authenticated & authorized. Nginx can be configured to make an [`auth_request`](http://nginx.org/en/docs/http/ngx_http_auth_request_module.html) to the API for permission before serving protected content. This way, Nginx is still serving all site content to the Internet, while your API server exclusively handles business logic (including authentication & authorization).
 
 This architecture is easier to extend, scale, and secure in a number of ways.
+
+### Serverless
+
+The components could be further teased out into a fully serverless architecture...
+
+## Performance
+
+`TestPerformance.kt` implies that Katapult's reflection-based request handling is slower than directly handling requests. While this makes sense, performance can possibly be improved by caching the reflected request method argument signature instead of re-discovering them on each request.  
 
 ## Wishlist
 
 - Bring the `app` and `api` projects together under one build environment (maybe by having gradle run the yarn scripts)
 - Rewrite `build.gradle` in Kotlin script
 - Cross-compile the Kotlin data classes used by the API for both JS and JVM, so the same implementations can be sent and received on each side
-- Allow for TypeScript `.ts` files, as well as `<script lang="ts">` in `.vue` files (preliminary `tsconfig.json` added, but not yet well-tested)
-- Integrated automatic Let's Encrypt certificate registration/renewal
+- Experiment with `<script lang="ts">` in `.vue` files
+- Integrate automatic Let's Encrypt certificate registration/renewal
 - Meaningful unit tests
 
 Overall, it would be desirable to develop modules for more common use-cases, such as file upload, user signup, email verification, etc, etc.
 
-> Advice is most welcome!
+> Suggestions and advice are most welcome!
 
 ## Project
 
@@ -366,7 +369,7 @@ git checkout develop
 git commit -a -m "vX.Y.Z ..."
 git checkout master
 git merge develop
-git tag vX.Y.Z
+git tag X.Y.Z
 git push --all && git push --tags
 git checkout develop
 ```

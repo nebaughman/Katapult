@@ -98,7 +98,6 @@ class TestPerformance {
     val start = System.nanoTime()
     Client("http://localhost:7000/api/$endpoint").use { client ->
       for (i in 1..count) client.send(payload, TestData::class)
-      //val response = client.send(payload, TestData::class)
       //println(response)
     }
     return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)

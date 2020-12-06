@@ -1,6 +1,5 @@
 package net.nyhm.katapult
 
-import com.google.inject.Inject
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
@@ -12,7 +11,7 @@ import java.sql.Connection
 /**
  * Exposed database dao classes should depend on [ExposedDb] to ensure database has been initialized.
  */
-class ExposedDb @Inject constructor(driver: DbDriver) {
+class ExposedDb(driver: DbDriver) {
 
   init {
     driver.init()
@@ -50,7 +49,7 @@ data class SqliteConfig(
  * Exposed uses a single global configuration.
  * Modules that utilize Exposed-based data classes have an invisible dependency on this module.
  */
-class SqliteDriver @Inject constructor(private val config: SqliteConfig): DbDriver {
+class SqliteDriver(private val config: SqliteConfig): DbDriver {
   override fun init() {
     val url = "jdbc:sqlite:${config.dbFile}"
     Database.connect(url, "org.sqlite.JDBC")
@@ -67,7 +66,7 @@ data class PostgresConfig(
   val pass: String = ""
 ): DbConfig
 
-class PostgresDriver @Inject constructor(private val config: PostgresConfig): DbDriver {
+class PostgresDriver(private val config: PostgresConfig): DbDriver {
   override fun init() {
     val url = "jdbc:postgresql://${config.host}/${config.db}"
     Database.connect(url, "org.postgresql.Driver", config.user, config.pass)

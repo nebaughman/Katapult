@@ -1,6 +1,5 @@
 package net.nyhm.katapult.example
 
-import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.*
@@ -42,7 +41,7 @@ data class AuthConfig(
   val guardPathAccess: Boolean = true
 )
 
-class AuthModule @Inject constructor(private val config: AuthConfig): KatapultModule {
+class AuthModule(private val config: AuthConfig): KatapultModule {
 
   private val routes = {
 

@@ -1,6 +1,5 @@
 package net.nyhm.katapult.example
 
-import com.google.inject.Inject
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.http.BadRequestResponse
@@ -14,7 +13,7 @@ data class AdminConfig(
   val guardPathAccess: Boolean = true
 )
 
-class AdminModule @Inject constructor(private val config: AdminConfig): KatapultModule {
+class AdminModule(private val config: AdminConfig): KatapultModule {
 
   private val routes = {
 
