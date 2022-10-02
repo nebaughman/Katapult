@@ -2,10 +2,13 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.post
 import net.nyhm.katapult.*
+import net.nyhm.katapult.mod.HttpModule
+import net.nyhm.katapult.mod.HttpSpec
 import net.nyhm.pick.DiBuilder
 import org.eclipse.jetty.client.HttpClient
 import org.eclipse.jetty.client.util.StringContentProvider
 import org.eclipse.jetty.http.HttpHeader
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
@@ -69,13 +72,14 @@ class Client(val url: String): AutoCloseable {
  * degree (which depends).
  */
 class TestPerformance {
-  @Test fun testDirect() = testPerformance("direct")
-  @Test fun testReflect() = testPerformance("reflect")
+  @Test @Disabled fun testDirect() = testPerformance("direct")
+  @Test @Disabled fun testReflect() = testPerformance("reflect")
 
   private fun testPerformance(endpoint: String) {
     val di = DiBuilder()
       .register(TestModule())
       .register(Processor::class) { DiProcessor(it) }
+      .register(HttpModule(HttpSpec(port = 9999)))
       .di
     val katapult = Katapult(di.getAll(), di.get()).start()
     val ms = call(endpoint, TestData("asdf"), 8000)
