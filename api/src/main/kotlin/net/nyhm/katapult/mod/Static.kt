@@ -1,6 +1,7 @@
 package net.nyhm.katapult.mod
 
 import io.javalin.core.JavalinConfig
+import io.javalin.http.staticfiles.Location
 import net.nyhm.katapult.KatapultModule
 
 data class StaticFilesSpec(
@@ -10,8 +11,11 @@ data class StaticFilesSpec(
 /**
  * This module enables static file serving
  */
-open class StaticFilesModule(val spec: StaticFilesSpec): KatapultModule {
+open class StaticFilesModule(
+  val spec: StaticFilesSpec,
+  val location: Location,
+): KatapultModule {
   override fun config(config: JavalinConfig) {
-    spec.paths.forEach { config.addStaticFiles(it) }
+    spec.paths.forEach { config.addStaticFiles(it, location) }
   }
 }

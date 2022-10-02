@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-    id 'org.jetbrains.kotlin.jvm' version '1.5.20'
+    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
@@ -16,8 +16,8 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
 
-    implementation 'com.github.ajalt.clikt:clikt:3.0.1'
-    implementation 'io.javalin:javalin:3.12.0'
+    implementation 'com.github.ajalt.clikt:clikt:3.5.0'
+    implementation 'io.javalin:javalin:4.6.4'
     implementation 'org.slf4j:slf4j-simple:1.7.30'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.11.3'
     implementation 'commons-codec:commons-codec:1.15'
@@ -36,7 +36,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
-    implementation 'net.nyhm:pick:0.0.0' // see settings.gradle (github repo)
+    implementation 'net.nyhm:pick:0.0.1' // see settings.gradle (github repo)
 }
 
 // https://stackoverflow.com/a/33026919/6004010

@@ -3,7 +3,7 @@ package net.nyhm.katapult.example
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.util.StdConverter
-import io.javalin.core.security.Role
+import io.javalin.core.security.RouteRole
 import net.nyhm.katapult.ExposedDb
 import net.nyhm.katapult.KatapultModule
 import net.nyhm.katapult.Log
@@ -46,7 +46,7 @@ class UsersModule(val spec: UsersSpec, val userDao: UserDao): KatapultModule {
 /**
  * Access role
  */
-enum class UserRole: Role {
+enum class UserRole: RouteRole {
   @JsonProperty("user")
   USER,
 

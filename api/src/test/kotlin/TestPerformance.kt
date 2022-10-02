@@ -16,7 +16,7 @@ class TestModule: KatapultModule {
     post("/api/reflect") { it.process(::handle) }
 
     post("/api/direct") { ctx ->
-      val value = ctx.body<TestData>().value
+      val value = ctx.bodyAsClass<TestData>().value
       ctx.json(TestData(value.reversed()))
     }
   }

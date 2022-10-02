@@ -30,7 +30,7 @@ fun Context.isAjax() = this.header("X-Requested-With") == "XMLHttpRequest"
  * (using the internally configured [Processor]).
  */
 fun Context.process(endpoint: KFunction<*>) {
-  appAttribute(Processor::class.java).process(this, endpoint)
+  appAttribute<Processor>("processor").process(this, endpoint)
 }
 
 /**

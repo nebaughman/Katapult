@@ -56,7 +56,7 @@ class Katapult(
       config.server { server } // set the (potentially customized) Jetty server
     }
     // request context Processor stored as attribute
-    app.attribute(Processor::class.java, processor)
+    app.attribute("processor", processor)
     modules.forEach { it.config(app) } // modules can config Javalin app
     app.start() // http(s) connector(s) specif(y|ies) port(s)
     this.app = app // prior exception will not set app
